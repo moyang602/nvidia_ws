@@ -1,0 +1,7 @@
+<launch>
+    <node name="rob_feedback" pkg="rob_feedback" type="rob_feedback_pub" respawn="false" output="screen" >
+        <param name="port" type="int" value="8002" />
+        <param name="ip_index" type="int" value="3" />  
+        <!-- 3 default -->
+    </node>
+</launch>
