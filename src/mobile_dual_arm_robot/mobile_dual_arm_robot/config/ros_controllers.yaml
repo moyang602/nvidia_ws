@@ -1,0 +1,113 @@
+joint_state_controller:
+  type: joint_state_controller/JointStateController
+  publish_rate: 50.0 
+left_arm_controller:
+  # type: position_controllers/JointTrajectoryController
+  type: effort_controllers/JointTrajectoryController
+  joints:
+     - leftarm_joint1
+     - leftarm_joint2
+     - leftarm_joint3
+     - leftarm_joint4
+     - leftarm_joint5
+     - leftarm_joint6
+     - leftarm_joint7
+  constraints:
+      goal_time: 0.6
+      stopped_velocity_tolerance: 0.05
+      leftarm_joint1: {trajectory: 0.1, goal: 0.1}
+      leftarm_joint2: {trajectory: 0.1, goal: 0.1}
+      leftarm_joint3: {trajectory: 0.1, goal: 0.1}
+      leftarm_joint4: {trajectory: 0.1, goal: 0.1}
+      leftarm_joint5: {trajectory: 0.1, goal: 0.1}
+      leftarm_joint6: {trajectory: 0.1, goal: 0.1}
+      leftarm_joint7: {trajectory: 0.1, goal: 0.1}
+  gains:
+    leftarm_joint1: {p: 1000, d: 1, i: 0, i_clamp: 1}
+    leftarm_joint2: {p: 1000, d: 10, i: 0, i_clamp: 1}
+    leftarm_joint3: {p: 1000, d: 1, i: 0, i_clamp: 1}
+    leftarm_joint4: {p: 500, d: 5, i: 0, i_clamp: 1}
+    leftarm_joint5: {p: 100, d: 1, i: 0, i_clamp: 1}
+    leftarm_joint6: {p: 100, d: 1, i: 0, i_clamp: 1}
+    leftarm_joint7: {p: 100, d: 1, i: 0, i_clamp: 1}
+  stop_trajectory_duration: 0.5
+  state_publish_rate:  25
+  action_monitor_rate: 1
+  allow_partial_joints_goal: True
+
+right_arm_controller:
+  # type: position_controllers/JointTrajectoryController
+  type: effort_controllers/JointTrajectoryController
+  joints:
+     - rightarm_joint1
+     - rightarm_joint2
+     - rightarm_joint3
+     - rightarm_joint4
+     - rightarm_joint5
+     - rightarm_joint6
+     - rightarm_joint7
+  constraints:
+      goal_time: 0.6
+      stopped_velocity_tolerance: 0.05
+      rightarm_joint1: {trajectory: 0.1, goal: 0.1}
+      rightarm_joint2: {trajectory: 0.1, goal: 0.1}
+      rightarm_joint3: {trajectory: 0.1, goal: 0.1}
+      rightarm_joint4: {trajectory: 0.1, goal: 0.1}
+      rightarm_joint5: {trajectory: 0.1, goal: 0.1}
+      rightarm_joint6: {trajectory: 0.1, goal: 0.1}
+      rightarm_joint7: {trajectory: 0.1, goal: 0.1}
+  gains:
+    rightarm_joint1: {p: 1000, d: 1, i: 0, i_clamp: 1}
+    rightarm_joint2: {p: 1000, d: 10, i: 0, i_clamp: 1}
+    rightarm_joint3: {p: 1000, d: 1, i: 0, i_clamp: 1}
+    rightarm_joint4: {p: 500, d: 5, i: 0, i_clamp: 1}
+    rightarm_joint5: {p: 100, d: 1, i: 0, i_clamp: 1}
+    rightarm_joint6: {p: 100, d: 1, i: 0, i_clamp: 1}
+    rightarm_joint7: {p: 100, d: 1, i: 0, i_clamp: 1}
+  stop_trajectory_duration: 0.5
+  state_publish_rate:  25
+  action_monitor_rate: 1
+  allow_partial_joints_goal: True
+
+left_arm_endEffector_controller:
+  # type: position_controllers/JointTrajectoryController
+  type: effort_controllers/JointTrajectoryController
+  joints:
+    #  - leftarm_joint7
+     - leftarm_gripper1_joint
+     - leftarm_gripper2_joint
+  constraints:
+      goal_time: 0.6
+      stopped_velocity_tolerance: 0.05
+      # leftarm_joint7: {trajectory: 0.1, goal: 0.1}
+      leftarm_gripper1_joint: {trajectory: 0.1, goal: 0.1}
+      leftarm_gripper2_joint: {trajectory: 0.1, goal: 0.1}
+  gains:
+    # leftarm_joint7: {p: 500, d: 1, i: 1, i_clamp: 1}
+    leftarm_gripper1_joint: {p: 500, d: 1, i: 1, i_clamp: 1}
+    leftarm_gripper2_joint: {p: 500, d: 1, i: 1, i_clamp: 1}
+  stop_trajectory_duration: 0.5
+  state_publish_rate:  25
+  action_monitor_rate: 1
+  allow_partial_joints_goal: True
+right_arm_endEffector_controller:
+  # type: position_controllers/JointTrajectoryController
+  type: effort_controllers/JointTrajectoryController
+  joints:
+    #  - rightarm_joint7
+     - rightarm_gripper1_joint
+     - rightarm_gripper2_joint
+  constraints:
+      goal_time: 0.6
+      stopped_velocity_tolerance: 0.05
+      # rightarm_joint7: {trajectory: 0.1, goal: 0.1}
+      rightarm_gripper1_joint: {trajectory: 0.1, goal: 0.1}
+      rightarm_gripper2_joint: {trajectory: 0.1, goal: 0.1}
+  gains:
+    # rightarm_joint7: {p: 500, d: 1, i: 1, i_clamp: 1}
+    rightarm_gripper1_joint: {p: 1000, d: 1, i: 1, i_clamp: 1}
+    rightarm_gripper2_joint: {p: 1000, d: 1, i: 1, i_clamp: 1}
+  stop_trajectory_duration: 0.5
+  state_publish_rate:  25
+  action_monitor_rate: 1
+  allow_partial_joints_goal: True

@@ -1,0 +1,5 @@
+<launch>
+    <param name="port" type="int" value="8000" />
+    <param name="hostIP" type="str" value="192.168.50.17" /> 
+    <node name="veltrans" pkg="veltrans" type="veltrans" respawn="false" output="screen" />
+</launch>

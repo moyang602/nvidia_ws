@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="ld" xmlns:xacro="rosxacro">
+  <link
+    name="dt_link">
+    <inertial>
+      <origin
+        xyz="0.0516849383495008 -0.0115560055807243 0.000141995254727825"
+        rpy="0 0 0" />
+      <mass
+        value="0.180568084535633" />
+      <inertia
+        ixx="0.00022046120464693"
+        ixy="2.53262012885174E-05"
+        ixz="2.11077017755422E-06"
+        iyy="0.000180601497897925"
+        iyz="-2.74036903866306E-07"
+        izz="0.000200824114886045" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://head4/meshes/dt_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.913725490196078 0.925490196078431 1" />
+      </material>
+    </visual>
+    <!-- <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://head4/meshes/dt_link.STL" />
+      </geometry>
+    </collision> -->
+  </link>
+  <joint
+    name="dt_joint"
+    type="revolute">
+    <origin
+      xyz="0 0 0.092"
+      rpy="1.5708 -1.5708 1.5708" />
+    <parent
+      link="base_link" />
+    <child
+      link="dt_link" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-0.6981"
+      upper="0.7854"
+      effort="100"
+      velocity="5" />
+  </joint>
+  <link
+    name="pt_link">
+    <inertial>
+      <origin
+        xyz="3.97378004429138E-05 0.0733141911165105 0.00301715107726889"
+        rpy="0 0 0" />
+      <mass
+        value="0.187257232807549" />
+      <inertia
+        ixx="0.000380798598802808"
+        ixy="-1.1249746034794E-07"
+        ixz="-1.72721961806269E-08"
+        iyy="0.000143202097066812"
+        iyz="3.00875139093559E-05"
+        izz="0.00029193641072338" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://head4/meshes/pt_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.913725490196078 0.925490196078431 1" />
+      </material>
+    </visual>
+    <!-- <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://head4/meshes/pt_link.STL" />
+      </geometry>
+    </collision> -->
+  </link>
+  <joint
+    name="pt_joint"
+    type="revolute">
+    <origin
+      xyz="0.064 0 0"
+      rpy="1.5708 1.5708 0" />
+    <parent
+      link="dt_link" />
+    <child
+      link="pt_link" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-0.7854"
+      upper="0.7854"
+      effort="100"
+      velocity="5" />
+  </joint>
+  <link
+    name="yt_link">
+    <inertial>
+      <origin
+        xyz="0.0405802046278408 8.11345843966172E-05 -0.0431283416137569"
+        rpy="0 0 0" />
+      <mass
+        value="0.991335636374897" />
+      <inertia
+        ixx="0.00984269640144693"
+        ixy="4.51352378221221E-06"
+        ixz="-0.000503542763797524"
+        iyy="0.00695114192221842"
+        iyz="-9.4441744532797E-06"
+        izz="0.0114215688919503" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://head4/meshes/yt_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <!-- <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://head4/meshes/yt_link.STL" />
+      </geometry>
+    </collision> -->
+  </link>
+  <joint
+    name="yt_joint"
+    type="revolute">
+    <origin
+      xyz="0 0.147 0"
+      rpy="1.5708 -1.5708 0" />
+    <parent
+      link="pt_link" />
+    <child
+      link="yt_link" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-1.57"
+      upper="1.57"
+      effort="100"
+      velocity="5" />
+  </joint>
+
+  <transmission name="dt_joint_transmission">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="dt_joint">
+          <!-- <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface> -->
+          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="dt_joint_actuator">
+          <!-- <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface> -->
+          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
+          <motorTorqueConstant>1</motorTorqueConstant>
+      </actuator>
+  </transmission>
+  <transmission name="pt_joint_transmission">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="pt_joint">
+          <!-- <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface> -->
+          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="pt_joint_actuator">
+          <!-- <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface> -->
+          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
+          <motorTorqueConstant>1</motorTorqueConstant>
+      </actuator>
+  </transmission>
+  <transmission name="yt_joint_transmission">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="yt_joint">
+          <!-- <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface> -->
+          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="yt_joint_actuator">
+          <!-- <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface> -->
+          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
+          <motorTorqueConstant>1</motorTorqueConstant>
+      </actuator>
+  </transmission>
+
+</robot>

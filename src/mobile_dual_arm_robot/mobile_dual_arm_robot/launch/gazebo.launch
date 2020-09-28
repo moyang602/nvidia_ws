@@ -1,0 +1,14 @@
+<launch>
+  <include
+    file="$(find gazebo_ros)/launch/empty_world.launch" />
+
+  <param
+    name="robot_description"
+    command="xacro $(find mobile_dual_arm_robot)/urdf/robot.xacro" />
+  <node
+    name="spawn_model"
+    pkg="gazebo_ros"
+    type="spawn_model"
+    args="-param robot_description -urdf -model mobile_dual_arm_robot -z 1.0"
+    output="screen" />
+</launch>

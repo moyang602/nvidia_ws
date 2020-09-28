@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+
+<launch>
+    <node name="ir1" pkg="ip_camera" type="ir_camera1.py" output="screen"/>
+    <node name="ir2" pkg="ip_camera" type="ir_camera2.py" output="screen"/>
+    <node name="cf" pkg="ip_camera" type="cf_camera.py" output="screen"/>
+    	<node name="image_transport1" pkg="image_transport" type="republish" args="raw in:=cf_image_raw theora out:=cf_image"/>
+	<node name="image_transport2" pkg="image_transport" type="republish" args="raw in:=ir_image1_raw theora out:=ir_image1"/>
+	<node name="image_transport3" pkg="image_transport" type="republish" args="raw in:=ir_image2_raw theora out:=ir_image2"/>
+</launch>

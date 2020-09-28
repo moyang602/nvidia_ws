@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.5.1-0-g916b5db  Build Version: 1.5.7152.31018
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot  name="jqr" xmlns:xacro='rosxacro'>
+  <!-- gazebo roscontrol -->
+	<gazebo>
+	    <plugin name="ros_control" filename="libgazebo_ros_control.so">
+	       <robotNamespace>/</robotNamespace>
+	       <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+	    </plugin>
+    </gazebo>
+
+
+    <!-- xiongqiang -->
+    <xacro:include filename="$(find mobile_dual_arm_robot)/urdf/xq.xacro" />
+
+    <!-- arm -->
+    <xacro:include filename="$(find mobile_dual_arm_robot)/urdf/leftarm.xacro" />
+    <xacro:include filename="$(find mobile_dual_arm_robot)/urdf/rightarm.xacro" />
+    
+    <xacro:include filename="$(find mobile_dual_arm_robot)/urdf/arm.gazebo.xacro" />
+      <xacro:arm_gazebo name="leftarm" />
+      <xacro:arm_gazebo name="rightarm" />
+
+    <!-- head -->
+    <xacro:include filename="$(find mobile_dual_arm_robot)/urdf/head4.xacro" />
+    <!-- camera -->
+    <xacro:include filename="$(find mobile_dual_arm_robot)/urdf/camera.xacro" />
+
+    <!-- lv dai -->
+    <xacro:include filename="$(find mobile_dual_arm_robot)/urdf/ld.xacro" />
+      <!-- left track -->
+      <xacro:ld name="left" parent="yao_link" leg1_upper="3.1415926" leg1_lower="0">
+        <origin xyz=" 0 0.21088 0" rpy="0 0 -1.5708" />
+      </xacro:ld>
+      <!-- right track -->
+      <xacro:ld name="right" parent="yao_link"  leg1_upper="0" leg1_lower="-3.1415926">
+        <origin xyz=" 0 -0.21088 0" rpy="0 3.1415926 -1.5708" />
+      </xacro:ld>
+
+      <gazebo>
+        <plugin filename="libSimpleTrackedVehiclePlugin.so" name="simple_tracked_vehicle">
+            <body>yao_link</body>
+            <!-- <robot_namespace>mobile_dual_arm_robot</robot_namespace> -->
+            <robot_namespace>robot</robot_namespace>
+            <!-- <robot_namespace>robot</robot_namespace> -->
+            <left_track>leftleg_link1</left_track>
+            <right_track>rightleg_link1</right_track>
+            <left_flipper>leftleg_link2</left_flipper>
+            <right_flipper>rightleg_link2</right_flipper>
+            <track_mu>2</track_mu>
+            <track_mu2>0.5</track_mu2>
+        </plugin>
+      </gazebo>
+      <gazebo>
+        <plugin filename="libKeysToCmdVelPlugin.so" name="keyboard_control">
+            <publish_as_twist>true</publish_as_twist>
+            <cmd_vel_topic>~/robot/cmd_vel_twist</cmd_vel_topic>
+            <linear_increment>0.2</linear_increment>
+            <angular_increment>0.3</angular_increment>
+        </plugin>
+      </gazebo>
+    
+    
+</robot>

@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<launch>
+	<!-- roslaunch arguments -->
+	<arg name="debug" default="false"/>
+	<arg name="gui" default="true"/>
+
+  	<!-- Resume the logic in empty_world.launch, changing only the name -->
+  	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+    		<arg name="world_name" value="$(find mobile_dual_arm_robot)/worlds/empty.world"/>
+    		<arg name="debug" value="$(arg debug)" />
+    		<arg name="gui" value="$(arg gui)" />
+    		<arg name="paused" value="true"/>
+    		<arg name="use_sim_time" value="true"/>
+    		<arg name="headless" value="false"/>
+    		<arg name="verbose" value="True"/>
+  	</include>
+
+  	<!-- Upload URDF into the ROS Parameter Server -->
+	<param name="robot_description" command="xacro $(find mobile_dual_arm_robot)/urdf/robot.xacro" />
+
+	<node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+		<rosparam param="source_list">[/joint_states]</rosparam>
+	</node>
+	<node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+
+	<node name="bh_urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false"
+		output="screen" args="-param robot_description -urdf -model mobile_dual_arm_robot -z 1.0 "/> 
+    
+
+	<include file="$(find mobile_dual_arm_robot)/launch/ros_controllers.launch"/> 
+
+  <node
+    name="rviz"
+    pkg="rviz"
+    type="rviz"
+    args="-d $(find mobile_dual_arm_robot)/urdf.rviz" />
+	
+</launch>

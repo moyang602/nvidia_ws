@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="camera1" xmlns:xacro="rosxacro">
+  <!-- Link1 -->
+  <gazebo reference="camera1">
+    <material>Gazebo/Orange</material>
+  </gazebo>
+
+  <material name="orange">
+    <color rgba="1.0 0.423529411765 0.0392156862745 1.0"/>
+  </material>
+
+  <!-- Used for fixing robot to Gazebo 'base_link' -->
+  <!-- <joint name="camera_joint" type="revolute">
+    <parent link="world"/>
+    <child link="camera1"/>
+    <origin rpy="-1.57 1.570 0" xyz="0 0.5 1.4"/>
+  </joint> -->
+  <joint    name="camera_joint" type="revolute">
+    <origin      xyz="0.12 0 0.0"      rpy="3.1415926 0 0" />
+    <parent      link="yt_link" />
+    <child      link="camera1" />
+    <axis      xyz="0 0 1" />
+    <limit lower="0" upper="0" effort="500" velocity="0.1" />
+  </joint>
+  <!-- camera Link -->
+  <link name="camera1">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.0"/>
+      <geometry>
+        <box size="0.05 0.02 0.02"/>
+      </geometry>
+      <material name="orange"/>
+    </visual>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 1.0"/>
+      <mass value="0.01"/>
+      <inertia ixx="0.00334166666667" ixy="0.0" ixz="0.0" iyy="0.00334166666667" iyz="0.0" izz="0.0000166666666667"/>
+    </inertial>
+  </link>
+  <!-- <gazebo reference="camera1">
+    <kinematic>1</kinematic>
+  </gazebo> -->
+
+  <!-- camera -->
+  <gazebo reference="camera1">
+    <sensor type="camera" name="camera1">
+      <update_rate>30.0</update_rate>
+      <camera name="top">
+        <horizontal_fov>1.3962634</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.04</near>
+          <far>10</far>
+        </clip>
+        <!-- <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.007</stddev>
+        </noise> -->
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.0</updateRate>
+        <cameraName>camera1</cameraName>
+        <imageTopicName>image_raw</imageTopicName>
+        <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+        <frameName>base_link</frameName>
+        <hackBaseline>0.07</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+</robot>

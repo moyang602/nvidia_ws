@@ -1,0 +1,25 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/zhangqiangbing/ws_moveit/devel/include/**",
+                "/opt/ros/melodic/include/**",
+                "/home/zhangqiangbing/ws_moveit/src/barrett_hand_gazebo/include/**",
+                "/home/zhangqiangbing/ws_moveit/src/ATEC/joint_follow_pid/include/**",
+                "/home/zhangqiangbing/ws_moveit/src/learn_rospy/include/**",
+                "/home/zhangqiangbing/ws_moveit/src/ATEC/tracked_vehicle/include/**",
+                "/usr/include/**"
+            ],
+            "name": "ROS",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++14"
+        }
+    ],
+    "version": 4
+}

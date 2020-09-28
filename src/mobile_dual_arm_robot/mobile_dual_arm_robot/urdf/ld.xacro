@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="ld" xmlns:xacro="rosxacro">
+
+<xacro:macro name="ld" params="name parent leg1_upper leg1_lower *first_track_origin">
+  <link
+    name="${name}leg_link1">
+    <inertial>
+      <origin
+        xyz="0.000306585056913111 -0.35 6.93889390390723E-17"
+        rpy="0 0 0" />
+      <mass
+        value="39.7184469707484" />
+      <inertia
+        ixx="2.94087900879581"
+        ixy="8.35081401726244E-17"
+        ixz="1.19343525101845E-17"
+        iyy="0.300956836519244"
+        iyz="0.000713821936820183"
+        izz="2.82439672812221" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ld/meshes/leftleg_link1.obj" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+
+    <collision>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 1.5708 0.0"/>
+      <geometry>
+        <cylinder radius="0.14" length="0.18"/>
+      </geometry>
+      <material name="red" >
+        <color rgba="1.0 0.0 0.0 0.5"/>
+      </material>
+    </collision>
+    <collision>
+      <origin xyz="0.0 -0.35 0.0" rpy="0.0 1.5708 0.0"/>
+      <geometry>
+        <box size="0.28 0.7 0.18"/>
+      </geometry>
+      <material name="blue" >
+        <color rgba="0.0 0.0 1.0 0.5"/>
+      </material>
+    </collision>
+    <collision>
+      <origin xyz="0.0 -0.7 0.0" rpy="0.0 1.5708 0.0"/>
+      <geometry>
+        <cylinder radius="0.14" length="0.18"/>
+      </geometry>
+      <material name="red" >
+        <color rgba="1.0 0.0 0.0 0.5"/>
+      </material>
+    </collision>
+
+    <!-- <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ld/meshes/leftleg_link1.STL" />
+      </geometry>
+    </collision> -->
+  </link>
+  <joint
+    name="${name}leg_joint1"
+    type="revolute">
+    <!-- <origin
+      xyz="-0.21088 0 0"
+      rpy="0 0 0" /> -->
+    <xacro:insert_block name="first_track_origin"/>
+    <parent
+      link="${parent}" />
+    <child
+      link="${name}leg_link1" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="${leg1_lower}"
+      upper="${leg1_upper}"
+      effort="500"
+      velocity="5" />
+  </joint>
+  <link
+    name="${name}leg_link2">
+    <inertial>
+      <origin
+        xyz="0.000306585056913167 -0.35 -5.55111512312578E-17"
+        rpy="0 0 0" />
+      <mass
+        value="39.7184469707484" />
+      <inertia
+        ixx="2.94087900879582"
+        ixy="-7.02932166348829E-17"
+        ixz="-8.08788151447156E-18"
+        iyy="0.300956836519244"
+        iyz="0.000713821936820406"
+        izz="2.82439672812221" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ld/meshes/leftleg_link1.obj" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+
+    <!-- <collision>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 1.5708 0.0"/>
+      <geometry>
+        <cylinder radius="0.14" length="0.18"/>
+      </geometry>
+      <material name="red" >
+        <color rgba="1.0 0.0 0.0 0.5"/>
+      </material>
+    </collision> -->
+    <collision>
+      <origin xyz="0.0 -0.35 0.0" rpy="0.0 1.5708 0.0"/>
+      <geometry>
+        <box size="0.28 0.7 0.18"/>
+      </geometry>
+      <material name="blue" >
+        <color rgba="0.0 0.0 1.0 0.5"/>
+      </material>
+    </collision>
+    <collision>
+      <origin xyz="0.0 -0.7 0.0" rpy="0.0 1.5708 0.0"/>
+      <geometry>
+        <cylinder radius="0.14" length="0.18"/>
+      </geometry>
+      <material name="red" >
+        <color rgba="1.0 0.0 0.0 0.5"/>
+      </material>
+    </collision>
+
+    <!-- <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ld/meshes/leftleg_link2.STL" />
+      </geometry>
+    </collision> -->
+  </link>
+  <joint
+    name="${name}leg_joint2"
+    type="revolute">
+    <origin
+      xyz="-0.17775 -0.7 0"
+      rpy="0 0 0" />
+    <parent
+      link="${name}leg_link1" />
+    <child
+      link="${name}leg_link2" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-3.1415926"
+      upper="3.1415926"
+      effort="500"
+      velocity="5" />
+  </joint>
+
+  <transmission name="${name}_leg_joint1_transmission">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${name}leg_joint1">
+          <!-- <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface> -->
+          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="${name}leg_joint1_actuator">
+          <!-- <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface> -->
+          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
+          <motorTorqueConstant>1</motorTorqueConstant>
+      </actuator>
+  </transmission>
+  <transmission name="${name}_leg_joint2_transmission">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${name}leg_joint2">
+          <!-- <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface> -->
+          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="${name}leg_joint2_actuator">
+          <!-- <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface> -->
+          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
+          <motorTorqueConstant>1</motorTorqueConstant>
+      </actuator>
+  </transmission>
+
+</xacro:macro>
+</robot>

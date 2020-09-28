@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.5.1-0-g916b5db  Build Version: 1.5.7152.31018
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot name="mobile_dual_arm_robot" xmlns:xacro='rosxacro'>
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="-0.000245947869981271 -0.186110769844011 -0.300559114524674"
+        rpy="0 0 0" />
+      <mass
+        value="29.230369056693" />
+      <inertia
+        ixx="1.34716988578229"
+        ixy="-0.00265368667451038"
+        ixz="0.00127378826841601"
+        iyy="0.909006705992246"
+        iyz="-0.0548690070502819"
+        izz="0.731431800891708" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mobile_dual_arm_robot/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <!-- <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mobile_dual_arm_robot/meshes/base_link.STL" />
+      </geometry>
+    </collision> -->
+  </link>
+  <link
+    name="yao_link">
+    <inertial>
+      <origin
+        xyz="-4.70664810752609E-17 1.00157612079759E-16 0.0619650186541176"
+        rpy="0 0 -1.5708" />
+      <mass
+        value="1.2829439668615" />
+      <inertia
+        ixx="0.00751845949038677"
+        ixy="-3.16997985837294E-09"
+        ixz="-4.63089857794973E-18"
+        iyy="0.0145758761435926"
+        iyz="-5.84911832562006E-19"
+        izz="0.0143225671493637" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 -1.8708" />
+      <geometry>
+        <mesh
+          filename="package://mobile_dual_arm_robot/meshes/yao_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.913725490196078 0.925490196078431 1" />
+      </material>
+    </visual>
+    <!-- <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mobile_dual_arm_robot/meshes/yao_link.STL" />
+      </geometry>
+    </collision> -->
+  </link>
+  <joint
+    name="yao_joint"
+    type="revolute">
+    <origin
+      xyz="0 0 -0.796"
+      rpy="0 0 1.5708" />
+    <parent
+      link="base_link" />
+    <child
+      link="yao_link" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-1.57"
+      upper="1.57"
+      effort="100"
+      velocity="5" />
+  </joint>
+
+  <transmission name="yao_joint_transmission">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="yao_joint">
+          <!-- <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface> -->
+          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="yao_joint_actuator">
+          <!-- <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface> -->
+          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
+          <motorTorqueConstant>1</motorTorqueConstant>
+      </actuator>
+  </transmission>
+
+</robot>

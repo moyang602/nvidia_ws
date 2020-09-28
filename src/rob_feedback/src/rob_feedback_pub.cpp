@@ -17,19 +17,14 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-
-#include <stdio.h>
 #include <ifaddrs.h>
-#include <arpa/inet.h>
-#include <cstring>
 
 #define MAX_LENGTH 254
 # define MAX_IP 10
 
 int port = 0;
-int id = 3;
+std::string hostIP;
 char recvbuf[1024];
-
 
 /**
  * This tutorial demonstrates simple sending of messages over the ROS system.
@@ -42,8 +37,8 @@ int main(int argc, char *argv[])
 	struct sockaddr_in addrSer;
  
 	n.param<int>("rob_feedback/port",port, 0);
-	n.param<int>("rob_feedback/ip_index",id, 3);
-	ROS_INFO("%d,%d\n",port,id);
+	n.param<std::string>("rob_feedback/hostIP",hostIP, "127.0.0.1");
+	
 
 	int sockSer = socket(AF_INET, SOCK_DGRAM, 0);
     if(sockSer == -1)
@@ -51,58 +46,10 @@ int main(int argc, char *argv[])
         perror("socket");
         exit(1);
     }
- 
-	char ipAddr[MAX_LENGTH];
-    ipAddr[0] = '\0';
-    struct ifaddrs * ifAddrStruct = NULL;
-    void * tmpAddrPtr = NULL;
-	char addressBuffer[MAX_IP][INET_ADDRSTRLEN];
-
-    if (getifaddrs(&ifAddrStruct) != 0)
-    {
-        //if wrong, go out!
-        printf("Somting is Wrong!\n");
-        return -1;
-    }
-    struct ifaddrs * iter = ifAddrStruct;
-	int cnt = 0;
-    while (iter != NULL && cnt <= MAX_IP) {
-        if (iter->ifa_addr->sa_family == AF_INET) { //if ip4
-            // is a valid IP4 Address
-            tmpAddrPtr = &((struct sockaddr_in *)iter->ifa_addr)->sin_addr;
-            inet_ntop(AF_INET, tmpAddrPtr, addressBuffer[cnt], INET_ADDRSTRLEN);
-            if (strlen(ipAddr) + strlen(addressBuffer[cnt]) < MAX_LENGTH - 1)
-            {
-                if (strlen(ipAddr) > 0)
-                {
-                     strcat(ipAddr, ";");
-                }
-                strcat(ipAddr, addressBuffer[cnt]);
-            }
-            else
-            {
-                printf("Too many ips!\n");
-                break;
-            }
-        }
-        //else if (ifaddrstruct->ifa_addr->sa_family == af_inet6) { // check it is ip6
-
-        /* deal ip6 addr */
-        //    tmpaddrptr = &((struct sockaddr_in *)ifaddrstruct->ifa_addr)->sin_addr;
-        //    char addressbuffer[inet6_addrstrlen];
-        //    inet_ntop(af_inet6, tmpaddrptr, addressbuffer, inet6_addrstrlen);
-
-        //}
-        iter = iter->ifa_next;
-		cnt ++;
-    }
-    
-	strcat(addressBuffer[id], "\0");
-    printf("The binded ips: %s, port is %d\n", addressBuffer[id], port);
 
     addrSer.sin_family = AF_INET;
-    addrSer.sin_port = htons(port);//端口号
-    addrSer.sin_addr.s_addr = inet_addr("10.1.76.121");//服务器地址 0为127.0.0.1， 1为默认的ip
+    addrSer.sin_port = htons(port);//????
+    addrSer.sin_addr.s_addr = inet_addr(hostIP.c_str());//????????? 0?127.0.0.1?? 1?????ip
  
     socklen_t addrlen = sizeof(struct sockaddr);
     int ret = bind(sockSer, (struct sockaddr*)&addrSer, addrlen);
@@ -128,6 +75,7 @@ int main(int argc, char *argv[])
 	std::string s;
 	std::vector<std::string> vStr;
 	double joint[14];
+	int pub_cnt = 0;
 	
 	while (ros::ok())
 	{
@@ -135,26 +83,38 @@ int main(int argc, char *argv[])
 		rec_len = recvfrom(sockSer, recvbuf, sizeof(recvbuf), MSG_DONTWAIT, (struct sockaddr*)&addrCli, &addrlen);
 		if (rec_len>0)
 		{
-			// ROS_INFO("Cli:>%s\n", recvbuf);
+			//ROS_INFO("Cli:>%s\n", recvbuf);
 			js.header.stamp = ros::Time::now();
 
 			s = recvbuf;
-			boost::split( vStr, s, boost::is_any_of( "," ), boost::token_compress_on );
-			for( int i = 0; i < 17; i++)
-			{
-				js.position.at(i) = atof(vStr.at(i).c_str());
-			}
+			try{
 
-			js.position.at(17) = 0.0;		// yao_joint
-			
-			ROS_INFO_STREAM("in:" << js.position.at(0) << " " << vStr.at(vStr.size()-2) << vStr.at(1));
-			js_pub.publish(js);
-		}
+				boost::split( vStr, s, boost::is_any_of( "," ), boost::token_compress_on );
+				for( int i = 0; i < 17; i++)
+					{
+						js.position.at(i) = atof(vStr.at(i).c_str());
+					}
+
+					js.position.at(17) = 0.0;		// yao_joint
+					
+					ROS_INFO_STREAM("in:" << js.position.at(0) << " " << vStr.at(vStr.size()-2) << vStr.at(1));
+					if (pub_cnt > 10)
+					{
+						pub_cnt = 0;
+						js_pub.publish(js);
+					}
+					pub_cnt ++;
+			}
+			catch(std::exception e1){
+				ROS_WARN("failed");
+			}	
+}
+				
+		
         
 		ros::spinOnce();
 		loop_rate.sleep();
 	}
-	freeifaddrs(ifAddrStruct);
 	close(sockSer);
 
 	return 0;

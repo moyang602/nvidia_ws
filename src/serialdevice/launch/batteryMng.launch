@@ -1,0 +1,14 @@
+<launch>
+
+  <node name="bat_manager" pkg="serialdevice" type="bat_manager" respawn="false" output="screen">
+  <!-- output="screen"-->
+  <param name="port"       value="/dev/bat_manager"/>  
+  <param name="baudrate"   value="115200"/>
+  <param name="fillter_period"   value="20"/>
+  </node>
+
+
+</launch>
+
+
+

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.5.1-0-g916b5db  Build Version: 1.5.7152.31018
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="ld">
+  <link
+    name="yao_link">
+    <inertial>
+      <origin
+        xyz="-4.70664810752609E-17 1.0045419797252E-16 0.0619650186541176"
+        rpy="0 0 0" />
+      <mass
+        value="1.2829439668615" />
+      <inertia
+        ixx="0.00751845949038677"
+        ixy="-3.16997985832778E-09"
+        ixz="-4.63089857794973E-18"
+        iyy="0.0145758761435926"
+        iyz="-5.1241050200337E-19"
+        izz="0.0143225671493637" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ld/meshes/yao_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.913725490196078 0.925490196078431 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ld/meshes/yao_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="leftleg_link1">
+    <inertial>
+      <origin
+        xyz="0.000306585056913111 -0.35 6.93889390390723E-17"
+        rpy="0 0 0" />
+      <mass
+        value="39.7184469707484" />
+      <inertia
+        ixx="2.94087900879581"
+        ixy="8.35081401726244E-17"
+        ixz="1.19343525101845E-17"
+        iyy="0.300956836519244"
+        iyz="0.000713821936820183"
+        izz="2.82439672812221" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ld/meshes/leftleg_link1.obj" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ld/meshes/leftleg_link1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="leftleg_joint1"
+    type="revolute">
+    <origin
+      xyz="-0.21088 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="yao_link" />
+    <child
+      link="leftleg_link1" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-1.57"
+      upper="1.57"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="leftleg_link2">
+    <inertial>
+      <origin
+        xyz="0.000306585056913167 -0.35 -5.55111512312578E-17"
+        rpy="0 0 0" />
+      <mass
+        value="39.7184469707484" />
+      <inertia
+        ixx="2.94087900879582"
+        ixy="-7.02932166348829E-17"
+        ixz="-8.08788151447156E-18"
+        iyy="0.300956836519244"
+        iyz="0.000713821936820406"
+        izz="2.82439672812221" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ld/meshes/leftleg_link1.obj" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ld/meshes/leftleg_link2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="leftleg_joint2"
+    type="revolute">
+    <origin
+      xyz="-0.17775 -0.7 0"
+      rpy="0 0 0" />
+    <parent
+      link="leftleg_link1" />
+    <child
+      link="leftleg_link2" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-1.57"
+      upper="1.57"
+      effort="0"
+      velocity="0" />
+  </joint>
+</robot>
