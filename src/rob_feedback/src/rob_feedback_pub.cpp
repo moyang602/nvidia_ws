@@ -1,6 +1,7 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "sensor_msgs/JointState.h"
+# include "geometry_msgs/WrenchStamped.h"
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -38,7 +39,8 @@ int main(int argc, char *argv[])
  
 	n.param<int>("rob_feedback/port",port, 0);
 	n.param<std::string>("rob_feedback/hostIP",hostIP, "127.0.0.1");
-	
+
+	std::cout<<hostIP<<std::endl;
 
 	int sockSer = socket(AF_INET, SOCK_DGRAM, 0);
     if(sockSer == -1)
@@ -67,8 +69,15 @@ int main(int argc, char *argv[])
 				"dt_joint","pt_joint","yt_joint","yao_joint", 
 				"leftleg_joint1","leftleg_joint2","rightleg_joint1","rightleg_joint2"};
 	js.position.resize(js.name.size());
+	js.effort.resize(js.name.size());
+	js.velocity.resize(js.name.size());
+
+	geometry_msgs::WrenchStamped w_r;
+	geometry_msgs::WrenchStamped w_l;
 
 	ros::Publisher js_pub = n.advertise<sensor_msgs::JointState>("joint_states", 1000);
+	ros::Publisher wrc_l_pub = n.advertise<geometry_msgs::WrenchStamped>("wrench_left", 1000);
+	ros::Publisher wrc_r_pub = n.advertise<geometry_msgs::WrenchStamped>("wrench_right", 1000);
 	ros::Rate loop_rate(1000);
 
 	int rec_len = 0;
@@ -76,34 +85,83 @@ int main(int argc, char *argv[])
 	std::vector<std::string> vStr;
 	double joint[14];
 	int pub_cnt = 0;
+	int i = 0;
+	double ft[12] = {0.0};
 	
 	while (ros::ok())
 	{
 	
+	// 22 关节角， 22 电流 + 4履带电机电流， 12 力传感器数据
 		rec_len = recvfrom(sockSer, recvbuf, sizeof(recvbuf), MSG_DONTWAIT, (struct sockaddr*)&addrCli, &addrlen);
 		if (rec_len>0)
 		{
 			//ROS_INFO("Cli:>%s\n", recvbuf);
 			js.header.stamp = ros::Time::now();
+			w_r.header.stamp = ros::Time::now();
+			w_r.header.frame_id = "rightarm_link7";
+			w_l.header.frame_id = "leftarm_link7";
+			w_l.header.stamp = ros::Time::now();
 
 			s = recvbuf;
 			try{
 
 				boost::split( vStr, s, boost::is_any_of( "," ), boost::token_compress_on );
-				for( int i = 0; i < 17; i++)
+				ROS_INFO_STREAM(vStr.size());
+				for( i = 0; i < js.name.size(); i++)
+				{
+					js.position.at(i) = atof(vStr.at(i).c_str());
+					if (isnan(js.position.at(i)))
 					{
-						js.position.at(i) = atof(vStr.at(i).c_str());
+						js.position.at(i) = 0;
+					}
+					js.effort.at(i) = atof(vStr.at(i + 22).c_str());
+					if (isnan(js.effort.at(i)))
+					{
+						js.effort.at(i) = 0;
 					}
 
-					js.position.at(17) = 0.0;		// yao_joint
-					
-					ROS_INFO_STREAM("in:" << js.position.at(0) << " " << vStr.at(vStr.size()-2) << vStr.at(1));
-					if (pub_cnt > 10)
+					// printf("%d,%f,%f,%f\n",i, js.position.at(i),js.effort.at(i), js.velocity.at(i));
+				}
+
+				for (i = 0; i< 4; i++)
+				{
+					js.velocity.at(i + 17) = atof(vStr.at(22 + 22 + i).c_str());
+					if (isnan(js.velocity.at(i + 18)))
 					{
-						pub_cnt = 0;
-						js_pub.publish(js);
+						js.velocity.at(i + 18) = 0;
 					}
-					pub_cnt ++;
+				}
+
+				for (i = 0; i< 12; i++)
+				{
+					ft[i] = atof(vStr.at(48 + i).c_str());
+					if (isinf(ft[i]))
+					{
+						ft[i] = 0;
+					}
+				}
+				w_l.wrench.force.x = ft[0];
+				w_l.wrench.force.y = ft[1];
+				w_l.wrench.force.z = ft[2];
+				w_l.wrench.torque.x = ft[3];
+				w_l.wrench.torque.y = ft[4];
+				w_l.wrench.torque.z = ft[5];
+
+				w_r.wrench.force.x = ft[6];
+				w_r.wrench.force.y = ft[7];
+				w_r.wrench.force.z = ft[8];
+				w_r.wrench.torque.x = ft[9];
+				w_r.wrench.torque.y = ft[10];
+				w_r.wrench.torque.z = ft[11];
+
+				if (pub_cnt > 10)
+				{
+					pub_cnt = 0;
+					js_pub.publish(js);
+					wrc_l_pub.publish(w_l);
+					wrc_r_pub.publish(w_r);
+				}
+				pub_cnt ++;
 			}
 			catch(std::exception e1){
 				ROS_WARN("failed");
