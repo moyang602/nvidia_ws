@@ -3,8 +3,6 @@
 #include <std_msgs/String.h> 
 #include <std_msgs/Empty.h> 
 
-
-
 #include<geometry_msgs/Twist.h>
 
 // ===========================================
@@ -240,7 +238,7 @@ int main (int argc, char** argv)
 
                     if (op_flag_1 == 1)
                     {
-                        angle1 = (double)rec_right[4] /500.0 * 180.0;
+                        angle1 = (double)rec_right[4] /500.0 * 270.0;
                     }
                     else {
                         angle1 = 0.0;

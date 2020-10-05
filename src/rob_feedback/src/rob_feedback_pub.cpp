@@ -166,9 +166,7 @@ int main(int argc, char *argv[])
 			catch(std::exception e1){
 				ROS_WARN("failed");
 			}	
-}
-				
-		
+		}
         
 		ros::spinOnce();
 		loop_rate.sleep();
