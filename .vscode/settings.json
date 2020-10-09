@@ -58,6 +58,18 @@
         "sstream": "cpp",
         "stdexcept": "cpp",
         "streambuf": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "deque": "cpp",
+        "unordered_set": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp",
+        "csignal": "cpp",
+        "condition_variable": "cpp",
+        "numeric": "cpp",
+        "fstream": "cpp",
+        "mutex": "cpp",
+        "thread": "cpp",
+        "cfenv": "cpp",
+        "typeindex": "cpp"
     }
 }

@@ -26,6 +26,7 @@
 int port = 0;
 std::string hostIP;
 char recvbuf[1024];
+int param_rate;
 
 /**
  * This tutorial demonstrates simple sending of messages over the ROS system.
@@ -39,7 +40,7 @@ int main(int argc, char *argv[])
  
 	n.param<int>("rob_feedback/port",port, 0);
 	n.param<std::string>("rob_feedback/hostIP",hostIP, "127.0.0.1");
-
+	n.param<int>("rob_feedback/publish_rate",param_rate, 100);
 	std::cout<<hostIP<<std::endl;
 
 	int sockSer = socket(AF_INET, SOCK_DGRAM, 0);
@@ -98,8 +99,8 @@ int main(int argc, char *argv[])
 			//ROS_INFO("Cli:>%s\n", recvbuf);
 			js.header.stamp = ros::Time::now();
 			w_r.header.stamp = ros::Time::now();
-			w_r.header.frame_id = "rightarm_link7";
-			w_l.header.frame_id = "leftarm_link7";
+			w_r.header.frame_id = "toollink_r";
+			w_l.header.frame_id = "toollink_l";
 			w_l.header.stamp = ros::Time::now();
 
 			s = recvbuf;
@@ -154,7 +155,7 @@ int main(int argc, char *argv[])
 				w_r.wrench.torque.y = ft[10];
 				w_r.wrench.torque.z = ft[11];
 
-				if (pub_cnt > 10)
+				if (pub_cnt > int(1000.0/param_rate))
 				{
 					pub_cnt = 0;
 					js_pub.publish(js);

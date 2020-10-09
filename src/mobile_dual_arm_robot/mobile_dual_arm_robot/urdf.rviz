@@ -6,6 +6,8 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /WrenchStamped1
+        - /TF1/Frames1
       Splitter Ratio: 0.4600760340690613
     Tree Height: 1861
   - Class: rviz/Selection
@@ -216,6 +218,99 @@ Visualization Manager:
       Torque Color: 204; 204; 51
       Unreliable: false
       Value: true
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+        base_link:
+          Value: true
+        dt_link:
+          Value: true
+        leftarm_link1:
+          Value: true
+        leftarm_link2:
+          Value: true
+        leftarm_link3:
+          Value: true
+        leftarm_link4:
+          Value: true
+        leftarm_link5:
+          Value: true
+        leftarm_link6:
+          Value: true
+        leftarm_link7:
+          Value: true
+        leftleg_link1:
+          Value: true
+        leftleg_link2:
+          Value: true
+        pt_link:
+          Value: true
+        rightarm_link1:
+          Value: true
+        rightarm_link2:
+          Value: true
+        rightarm_link3:
+          Value: true
+        rightarm_link4:
+          Value: true
+        rightarm_link5:
+          Value: true
+        rightarm_link6:
+          Value: true
+        rightarm_link7:
+          Value: true
+        rightleg_link1:
+          Value: true
+        rightleg_link2:
+          Value: true
+        toollink_l:
+          Value: true
+        toollink_r:
+          Value: true
+        yao_link:
+          Value: true
+        yt_link:
+          Value: true
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        base_link:
+          dt_link:
+            pt_link:
+              yt_link:
+                {}
+          leftarm_link1:
+            leftarm_link2:
+              leftarm_link3:
+                leftarm_link4:
+                  leftarm_link5:
+                    leftarm_link6:
+                      leftarm_link7:
+                        toollink_l:
+                          {}
+          rightarm_link1:
+            rightarm_link2:
+              rightarm_link3:
+                rightarm_link4:
+                  rightarm_link5:
+                    rightarm_link6:
+                      rightarm_link7:
+                        toollink_r:
+                          {}
+          yao_link:
+            leftleg_link1:
+              leftleg_link2:
+                {}
+            rightleg_link1:
+              rightleg_link2:
+                {}
+      Update Interval: 0
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -244,25 +339,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 3.9354724884033203
+      Distance: 5.4199957847595215
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.010605853982269764
-        Y: -0.7253040671348572
-        Z: -0.1101166158914566
+        X: 0.09175268560647964
+        Y: -0.519315779209137
+        Z: -0.23277315497398376
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.09539943188428879
+      Pitch: 0.26539909839630127
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.5704065561294556
+      Yaw: 1.5804088115692139
     Saved: ~
 Window Geometry:
   Displays:

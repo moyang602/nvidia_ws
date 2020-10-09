@@ -341,7 +341,7 @@
     <child
       link="rightarm_link6" />
     <axis
-      xyz="0 0 -1" />
+      xyz="0 0 1" />
     <limit
       lower="-2.1812"
       upper="2.1812"

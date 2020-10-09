@@ -3,7 +3,10 @@
 #include <std_msgs/String.h> 
 #include <std_msgs/Empty.h> 
 
-#include<geometry_msgs/Twist.h>
+#include <geometry_msgs/Twist.h>
+#include <sensor_msgs/JointState.h>
+#include "map"
+# include "math.h"
 
 // ===========================================
 #include <arpa/inet.h>
@@ -32,7 +35,8 @@ char sendbuf[MAX_LENGTH];
 
 # define max_step_angle 10.0
 
-#define DEG2RAD 3.1415926/180.0
+# define DEG2RAD 3.1415926/180.0
+# define RAD2DEG 180.0/3.1415926
 
 serial::Serial ser; //声明串口对象
 
@@ -49,9 +53,10 @@ int j = 0;
 uint8_t sum = 0;
 int rec_right[CHANNEL] = {0};
 int lastrec[CHANNEL] = {0};
-uint8_t op_flag_1 = 0;
-uint8_t op_flag_2 = 0;
-uint8_t op_flag_3 = 0;
+
+double js_angle[3] ={0.0};
+std::map<std::string, double> jsmap;
+std::map<std::string, double>::iterator iter;
 
 uint32_t watchdog = 0;
 
@@ -81,6 +86,47 @@ double fillter(double rec, int index, int times)
     return sum;
 }
 
+void js_callback(const sensor_msgs::JointState &js)
+{
+    if (abs(js.header.stamp.now().toSec() - ros::Time::now().toSec()) > 0.5)
+    {
+        return;
+    }
+    for (i = 0; i< js.name.size(); i++)
+    {
+        jsmap.insert(std::pair<std::string, double>(js.name.at(i).c_str(), js.position.at(i)));
+    }
+
+    iter = jsmap.find("leftleg_joint2");  
+    if(iter != jsmap.end())  {
+        js_angle[0] = iter->second;
+        // std::cout<<"Find, the value is "<<iter->second<<std::endl; 
+    } 
+    else{
+        std::cout<<"Do not Find"<<std::endl;  
+    }
+
+    iter = jsmap.find("leftleg_joint1");  
+    if(iter != jsmap.end()){
+        js_angle[1] = iter->second;
+        // std::cout<<"Find, the value is "<<iter->second<<std::endl;  
+    }
+    else  {
+        std::cout<<"Do not Find"<<std::endl;  
+    }
+
+    iter = jsmap.find("yao_joint");  
+    if(iter != jsmap.end()){
+        js_angle[2] = iter->second;
+        // std::cout<<"Find, the value is "<<iter->second<<std::endl;  
+    }
+    else
+    {
+        std::cout<<"Do not Find"<<std::endl;  
+    }
+    jsmap.clear();
+}
+
 
 int main (int argc, char** argv) 
 { 
@@ -94,6 +140,7 @@ int main (int argc, char** argv)
 
     //发布主题 
     ros::Publisher remo_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1000); 
+    ros::Subscriber js_sub = nh.subscribe("joint_states", 10, js_callback);
     
 	nh.param<std::string>("ardu_remoter_pub/port", param_port_path_, "/dev/remote_USB");
 	nh.param<int>("ardu_remoter_pub/baudrate", param_baudrate_, 9600);
@@ -156,13 +203,14 @@ int main (int argc, char** argv)
     double last_angle3 = 0.0;
 
     int slow;
+    double ref_rot[3] = {0.0};
+    double ref_ang[3] = {0.0};
+    int ref_flag = 0;
     
     while(ros::ok()) 
     { 
         // while(ser.available() < 10);
-
-            // ROS_INFO("num:%d \n",ser.available());
-        if(ser.available()){ 
+        if(ser.available()){
             watchdog = 0;
             ser.read(rec,1);
             if (rec[0] == 0xaa)
@@ -196,14 +244,13 @@ int main (int argc, char** argv)
                             if(rec_right[i] > 500) rec_right[i] = 500;
                             if(rec_right[i] < -500) rec_right[i] = -500;
                             if (abs(rec_right[i])<rDEADZONE) rec_right[i] = 0;
-                            
-                            rec_right[i] = (int)(fillter((double)rec_right[i], i, 20));
+
+                             rec_right[i] = (int)(fillter((double)rec_right[i], i, 20));
                             if (abs(rec_right[i] - lastrec[i]) <2 )
                             {
                                 rec_right[i] = lastrec[i];
                             }
                             lastrec[i] = rec_right[i];
-
                         }
                         else{
                             if(rec_right[i] > 500) rec_right[i] = 500;
@@ -223,43 +270,36 @@ int main (int argc, char** argv)
 
                     remo_pub.publish(cmd);
 
-                    if(abs(rec_right[4]) < rDEADZONE)
-                    {
-                        op_flag_1 = 1;
+                    if(rec_right[0]  > 400 && ref_flag == 0)
+                    {   
+                        ref_flag = 1;
+                        ref_rot[0] = rec_right[4];
+                        ref_rot[1] = rec_right[5];
+                        ref_rot[2] = rec_right[6];
+
+                        ref_ang[0] = js_angle[0];
+                        ref_ang[1] = js_angle[1];
+                        ref_ang[2] = js_angle[2];
+
+                        angle1 = (double)(rec_right[4] - ref_rot[0]) /500.0 * 180.0 + ref_ang[0] * RAD2DEG;
+                        angle2 = (double)(rec_right[5] - ref_rot[1]) /500.0 * 60.0 + ref_ang[1] * RAD2DEG;
+                        angle3 = (double)(rec_right[6] - ref_rot[2]) /500.0 * 180.0 + ref_ang[2] * RAD2DEG;
+
+                        last_angle1 = angle1;
+                        last_angle2 = angle2;
+                        last_angle3 = angle3;
                     }
-                    if(abs(rec_right[5]) < rDEADZONE)
+                    else if (abs(rec_right[0] ) <DEADZONE)
                     {
-                        op_flag_2 = 1;
-                    }
-                    if(abs(rec_right[6]) < rDEADZONE)
-                    {
-                        op_flag_3 = 1;
+                        ref_flag = 0;
                     }
 
-                    if (op_flag_1 == 1)
+                    if (ref_flag == 1)
                     {
-                        angle1 = (double)rec_right[4] /500.0 * 270.0;
-                    }
-                    else {
-                        angle1 = 0.0;
-                    }
-                    if (op_flag_2 == 1)
-                    {
-                        angle2 = (double)rec_right[5] /500.0 * 60.0;
-                    }
-                    else {
-                        angle2 = 0.0;
-                    }
-                    if (op_flag_3 == 1)
-                    {
-                        angle3 = (double)rec_right[6] /500.0 * 180.0;
-                    }
-                    else {
-                        angle3 = 0.0;
-                    }
+                        angle1 = (double)(rec_right[4] - ref_rot[0]) /500.0 * 180.0 + ref_ang[0] * RAD2DEG;
+                        angle2 = (double)(rec_right[5] - ref_rot[1]) /500.0 * 60.0 + ref_ang[1] * RAD2DEG;
+                        angle3 = (double)(rec_right[6] - ref_rot[2]) /500.0 * 180.0 + ref_ang[2] * RAD2DEG;
 
-                    if (op_flag_1 && op_flag_2  && op_flag_3)
-                    {
                         if (angle1 - last_angle1 > max_step_angle)
                         {
                             angle1 = last_angle1 + max_step_angle;
@@ -294,21 +334,17 @@ int main (int argc, char** argv)
                         sendto(sockCli, sendbuf, strlen(sendbuf)+1, 0, (struct sockaddr*)&addrSer, addrlen);
                         sendbuf[strlen(sendbuf)] == '\0';
                         ROS_INFO("%s",sendbuf);
-                    }
 
+                    }
                 }
                 sum = 0;
                 ser.flushInput(); 
-                
             }
         } 
         else{
             watchdog++;
             if (watchdog > param_loop_rate_ * 3){  // 3秒检测不到则认为已经加锁
                 watchdog = 0;
-                op_flag_1 = 0;
-                op_flag_2 = 0;
-                op_flag_3 = 0;
             }
         }    
         //处理ROS的信息，比如订阅消息,并调用回调函数 
