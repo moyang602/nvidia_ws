@@ -1,7 +1,7 @@
 <launch>
     <node name="rob_feedback" pkg="rob_feedback" type="rob_feedback_pub" respawn="false" output="screen" >
         <param name="port" type="int" value="8002" />
-        <param name="hostIP" type="str" value="192.168.8.8" /> 
+        <param name="hostIP" type="str" value="192.168.50.15" /> 
         <param name="publish_rate"   value="50"/>
 	<!--<param name="hostIP" type="str" value="10.8.0.4" />  -->
         <!-- 3 default -->

@@ -33,10 +33,21 @@ char sendbuf[MAX_LENGTH];
 #define MAX_y 1.0
 #define MAX_z 1.0
 
+# define MAX_ARM_RX 0.1
+# define MAX_ARM_RY 0.1
+# define MAX_ARM_RZ 0.1
+# define MAX_ARM_X 0.1
+# define MAX_ARM_Y 0.1
+# define MAX_ARM_Z 0.1
+
 # define max_step_angle 10.0
 
 # define DEG2RAD 3.1415926/180.0
 # define RAD2DEG 180.0/3.1415926
+
+# define GUANJIE 2
+# define STOP 0
+# define HUILING 1
 
 serial::Serial ser; //声明串口对象
 
@@ -47,7 +58,7 @@ int param_loop_rate_;
 serial::parity_t param_patity_;
 
 // ===========================================
-#define CHANNEL 7
+#define CHANNEL 9
 int i = 0;
 int j = 0;
 uint8_t sum = 0;
@@ -90,6 +101,7 @@ void js_callback(const sensor_msgs::JointState &js)
 {
     if (abs(js.header.stamp.now().toSec() - ros::Time::now().toSec()) > 0.5)
     {
+        ROS_WARN("Too Old Data");
         return;
     }
     for (i = 0; i< js.name.size(); i++)
@@ -125,8 +137,16 @@ void js_callback(const sensor_msgs::JointState &js)
         std::cout<<"Do not Find"<<std::endl;  
     }
     jsmap.clear();
+
+    // printf("%f,%f,%f\n",js_angle[0], js_angle[1], js_angle[2]);
 }
 
+void UDP_send(char *ch)
+{
+    sendto(sockCli, ch, strlen(ch)+1, 0, (struct sockaddr*)&addrSer, addrlen);
+    ch[strlen(ch)] == '\0';
+    ROS_INFO("%s",ch);
+}
 
 int main (int argc, char** argv) 
 { 
@@ -206,6 +226,20 @@ int main (int argc, char** argv)
     double ref_rot[3] = {0.0};
     double ref_ang[3] = {0.0};
     int ref_flag = 0;
+
+    int ldmode;
+    int last_ldmode;
+    double speedRate = 0.0;
+
+    double speedx = 0;
+    double speedy = 0;
+    double speedz = 0;
+    double speedRx = 0;
+    double speedRy = 0;
+    double speedRz = 0;
+
+    int left_once = 0;
+    int right_once = 0;
     
     while(ros::ok()) 
     { 
@@ -225,27 +259,29 @@ int main (int argc, char** argv)
                 //ROS_INFO("sum=%x;rec[9]=%x\n",sum,rec[9]);
                 if (rec[CHANNEL * 2 +1] == sum ){
                     //ROS_INFO("ok\n");
-                    rec_right[0] -= 1500;
-                    rec_right[1] -= 1500;
-                    rec_right[2] -= 1000;
-                    rec_right[3] -= 1500;
-                    rec_right[4] -= 1500;
-                    rec_right[5] -= 1500;
-                    rec_right[6] -= 1500;
+                    for (i = 0; i< CHANNEL; i++)
+                    {
+                        if (i == 2){
+                            rec_right[2] -= 1000;
+                        }
+                        else{
+                            rec_right[i] -= 1500;
+                        }
+                    }
                     
-                    for (i= 0; i <7 ;i++){
+                    for (i= 0; i <CHANNEL ;i++){
                         if (i == 2){
                             if(rec_right[i] > 1000) rec_right[i] = 1000;
                             if(rec_right[i] < 0) rec_right[i] = 0;
                             if (rec_right[i]<100) rec_right[i] = 0;
                             else rec_right[i] -=100;
                         }
-                        else if(i >= 4){
+                        else if(i >= 4 && i <= 6){
                             if(rec_right[i] > 500) rec_right[i] = 500;
                             if(rec_right[i] < -500) rec_right[i] = -500;
                             if (abs(rec_right[i])<rDEADZONE) rec_right[i] = 0;
 
-                             rec_right[i] = (int)(fillter((double)rec_right[i], i, 20));
+                            rec_right[i] = (int)(fillter((double)rec_right[i], i, 20));
                             if (abs(rec_right[i] - lastrec[i]) <2 )
                             {
                                 rec_right[i] = lastrec[i];
@@ -259,82 +295,225 @@ int main (int argc, char** argv)
                         }
                     }
 
-                    ROS_INFO("1:%d 2:%d 3:%d 4:%d 5:%d 6:%d 7:%d  ",rec_right[0],rec_right[1],rec_right[2],rec_right[3],rec_right[4],rec_right[5],rec_right[6]);
+                    // ROS_INFO("1:%d 2:%d 3:%d 4:%d 5:%d 6:%d 7:%d  ",rec_right[0],rec_right[1],rec_right[2],rec_right[3],rec_right[4],rec_right[5],rec_right[6]);
 
-                    cmd.linear.x  = float( rec_right[2] * rec_right[1] ) / 450000.0 * MAX_x;
-                    cmd.linear.y  = 0.0; //float( rec_right[2] ) * float( rec_right[0] ) / 450000.0 * MAX_y ;
-                    cmd.linear.z  = 0;
-                    cmd.angular.x = 0;
-                    cmd.angular.y = 0;
-                    cmd.angular.z = float( rec_right[2] * rec_right[3] ) / 450000.0 * MAX_z ;
-
-                    remo_pub.publish(cmd);
-
-                    if(rec_right[0]  > 400 && ref_flag == 0)
-                    {   
-                        ref_flag = 1;
-                        ref_rot[0] = rec_right[4];
-                        ref_rot[1] = rec_right[5];
-                        ref_rot[2] = rec_right[6];
-
-                        ref_ang[0] = js_angle[0];
-                        ref_ang[1] = js_angle[1];
-                        ref_ang[2] = js_angle[2];
-
-                        angle1 = (double)(rec_right[4] - ref_rot[0]) /500.0 * 180.0 + ref_ang[0] * RAD2DEG;
-                        angle2 = (double)(rec_right[5] - ref_rot[1]) /500.0 * 60.0 + ref_ang[1] * RAD2DEG;
-                        angle3 = (double)(rec_right[6] - ref_rot[2]) /500.0 * 180.0 + ref_ang[2] * RAD2DEG;
-
-                        last_angle1 = angle1;
-                        last_angle2 = angle2;
-                        last_angle3 = angle3;
-                    }
-                    else if (abs(rec_right[0] ) <DEADZONE)
+                    if (abs(rec_right[7]) < DEADZONE)       // 右手拨杆中位
                     {
-                        ref_flag = 0;
+                        cmd.linear.x  = float( rec_right[2] * rec_right[1] ) / 450000.0 * MAX_x;
+                        cmd.linear.y  = 0.0; //float( rec_right[2] ) * float( rec_right[0] ) / 450000.0 * MAX_y ;
+                        cmd.linear.z  = 0;
+                        cmd.angular.x = 0;
+                        cmd.angular.y = 0;
+                        cmd.angular.z = float( rec_right[2] * rec_right[3] ) / 450000.0 * MAX_z ;
+
+                        remo_pub.publish(cmd);
+
+                        if (abs(rec_right[0] ) <DEADZONE)
+                        {
+                            ldmode = STOP;
+                            if (last_ldmode == HUILING)
+                            {   
+                                sprintf(sendbuf,"stopMove(3)\n");
+                                UDP_send(sendbuf);
+                            }
+                        }
+                        else if(rec_right[0] > 400 && last_ldmode == STOP)        // 右手摇杆打左
+                        {   
+                            ldmode = GUANJIE;
+                            ref_rot[0] = rec_right[4];
+                            ref_rot[1] = rec_right[5];
+                            ref_rot[2] = rec_right[6];
+
+                            ref_ang[0] = js_angle[0];
+                            ref_ang[1] = js_angle[1];
+                            ref_ang[2] = js_angle[2];
+
+                            angle1 = (double)(rec_right[4] - ref_rot[0]) /500.0 * 180.0 + ref_ang[0] * RAD2DEG;
+                            angle2 = (double)(rec_right[5] - ref_rot[1]) /500.0 * 60.0 + ref_ang[1] * RAD2DEG;
+                            angle3 = (double)(rec_right[6] - ref_rot[2]) /500.0 * 180.0 + ref_ang[2] * RAD2DEG;
+
+                            last_angle1 = angle1;
+                            last_angle2 = angle2;
+                            last_angle3 = angle3;
+
+                        }
+                        else if (rec_right[0] < -400 && last_ldmode == STOP)
+                        {
+                            ldmode = HUILING;
+
+                            ref_ang[0] = js_angle[0];
+                            ref_ang[1] = js_angle[1];
+                            ref_ang[2] = js_angle[2];
+                        }
+
+                        if (ldmode == GUANJIE)
+                        {
+                            angle1 = (double)(rec_right[4] - ref_rot[0]) /500.0 * 180.0 + ref_ang[0] * RAD2DEG;
+                            angle2 = (double)(rec_right[5] - ref_rot[1]) /500.0 * 60.0 + ref_ang[1] * RAD2DEG;
+                            angle3 = (double)(rec_right[6] - ref_rot[2]) /500.0 * 180.0 + ref_ang[2] * RAD2DEG;
+
+                            if (angle1 - last_angle1 > max_step_angle)
+                            {
+                                angle1 = last_angle1 + max_step_angle;
+                            }
+                            else if (angle1 - last_angle1 < -max_step_angle)
+                            {
+                                angle1 = last_angle1 - max_step_angle;
+                            }
+                            last_angle1 = angle1;
+
+                            if (angle2 - last_angle2 > max_step_angle)
+                            {
+                                angle2 = last_angle2 + max_step_angle;
+                            }
+                            else if (angle2 - last_angle2 < -max_step_angle)
+                            {
+                                angle2 = last_angle2 - max_step_angle;
+                            }
+                            last_angle2 = angle2;
+
+                            if (angle3 - last_angle3 > max_step_angle)
+                            {
+                                angle3 = last_angle3 + max_step_angle;
+                            }
+                            else if (angle3 - last_angle3 < -max_step_angle)
+                            {
+                                angle3 = last_angle3 - max_step_angle;
+                            }
+                            last_angle3 = angle3;
+                            sprintf(sendbuf,"moveFollow(3,%.3f,%.3f,%.3f,%.3f,%.3f)\n", angle3 * DEG2RAD, angle1 * DEG2RAD, -angle2 * DEG2RAD, angle2 * DEG2RAD, angle1 * DEG2RAD);
+                            UDP_send(sendbuf);
+                        }
+
+                        if (ldmode == HUILING)
+                        {
+                            // TODO：如果旋扭回到中值附近则发送对应零给关节
+                            if (abs(rec_right[4]) <rDEADZONE){
+                                angle1 = 0.0;
+                            }
+                            else {
+                                angle1 = ref_ang[0];
+                            }
+                    
+                            if (abs(rec_right[5]) <rDEADZONE){
+                                angle2 = 0.0;
+                            }
+                            else {
+                                angle2 = ref_ang[1];
+                            }
+
+                            if (abs(rec_right[6]) <rDEADZONE){
+                                angle3 = 0.0;
+                            }
+                            else {
+                                angle3 = ref_ang[2];
+                            }
+
+                            if (last_ldmode == STOP)
+                            {
+                                sprintf(sendbuf,"moveJ(3,%.3f,%.3f,%.3f,%.3f,%.3f,0.3)\n", angle3, angle1, -angle2, angle2, angle1);
+                                UDP_send(sendbuf);
+                            } 
+                        }
+
+                        last_ldmode = ldmode;
                     }
-
-                    if (ref_flag == 1)
+                    else if (rec_right[7] > 400)        // 右手拨杆向前
                     {
-                        angle1 = (double)(rec_right[4] - ref_rot[0]) /500.0 * 180.0 + ref_ang[0] * RAD2DEG;
-                        angle2 = (double)(rec_right[5] - ref_rot[1]) /500.0 * 60.0 + ref_ang[1] * RAD2DEG;
-                        angle3 = (double)(rec_right[6] - ref_rot[2]) /500.0 * 180.0 + ref_ang[2] * RAD2DEG;
-
-                        if (angle1 - last_angle1 > max_step_angle)
-                        {
-                            angle1 = last_angle1 + max_step_angle;
+                        if (rec_right[2] > 600 && rec_right[2] < 800){
+                            speedx = 0;
+                            speedy = 0;
+                            speedz = 0;
+                            speedRx = float( rec_right[1] ) / 450.0 * MAX_ARM_RX;
+                            speedRy = float( rec_right[3] ) / 450.0 * MAX_ARM_RY;
+                            speedRz = float( rec_right[0] ) / 450.0 * MAX_ARM_RZ;
+                            if(rec_right[8] > 200)
+                            {
+                                sprintf(sendbuf,"speedL(0,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz);
+                                UDP_send(sendbuf);
+                            }
                         }
-                        else if (angle1 - last_angle1 < -max_step_angle)
-                        {
-                            angle1 = last_angle1 - max_step_angle;
+                        else if (rec_right[2] < 400){
+                            speedRx = 0;
+                            speedRy = 0;
+                            speedRz = 0;
+                            speedx = float( rec_right[1] ) / 450.0 * MAX_ARM_X;
+                            speedy = float( rec_right[3] ) / 450.0 * MAX_ARM_Y;
+                            speedz = float( rec_right[0] ) / 450.0 * MAX_ARM_Z;
+                            if(rec_right[8] > 200)
+                            {
+                                sprintf(sendbuf,"speedL(0,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz);
+                                UDP_send(sendbuf);
+                            }
                         }
-                        last_angle1 = angle1;
-
-                        if (angle2 - last_angle2 > max_step_angle)
-                        {
-                            angle2 = last_angle2 + max_step_angle;
+                        else if (rec_right[2] > 880){
+                            if(rec_right[8] > 200)
+                            {
+                                if (left_once == 1)
+                                {
+                                    left_once = 0;
+                                    sprintf(sendbuf,"moveJ(0,0,0,600,0,0,0,0.1)\n");
+                                    UDP_send(sendbuf);
+                                }
+                            }
+                            else {
+                                if (left_once == 0)
+                                {
+                                    left_once = 1;
+                                    sprintf(sendbuf,"stopMove(0)\n");
+                                    UDP_send(sendbuf);
+                                }
+                            }
                         }
-                        else if (angle2 - last_angle2 < -max_step_angle)
-                        {
-                            angle2 = last_angle2 - max_step_angle;
+                    }
+                    else if (rec_right[7] < -400)       // 右手拨杆向后
+                    {
+                        if (rec_right[2] > 600 && rec_right[2] < 800){
+                            speedx = 0;
+                            speedy = 0;
+                            speedz = 0;
+                            speedRx = float( rec_right[1] ) / 450.0 * MAX_ARM_RX;
+                            speedRy = float( rec_right[3] ) / 450.0 * MAX_ARM_RY;
+                            speedRz = float( rec_right[0] ) / 450.0 * MAX_ARM_RZ;
+                            if(rec_right[8] > 200)
+                            {
+                                sprintf(sendbuf,"speedL(1,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz);
+                                UDP_send(sendbuf);
+                            }
                         }
-                        last_angle2 = angle2;
-
-                        if (angle3 - last_angle3 > max_step_angle)
-                        {
-                            angle3 = last_angle3 + max_step_angle;
+                        else if (rec_right[2] < 400){
+                            speedRx = 0;
+                            speedRy = 0;
+                            speedRz = 0;
+                            speedx = float( rec_right[1] ) / 450.0 * MAX_ARM_X;
+                            speedy = float( rec_right[3] ) / 450.0 * MAX_ARM_Y;
+                            speedz = float( rec_right[0] ) / 450.0 * MAX_ARM_Z;
+                            if(rec_right[8] > 200)
+                            {
+                                sprintf(sendbuf,"speedL(1,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz);
+                                UDP_send(sendbuf);
+                            }
                         }
-                        else if (angle3 - last_angle3 < -max_step_angle)
-                        {
-                            angle3 = last_angle3 - max_step_angle;
+                        else if (rec_right[2] > 880){
+                            if(rec_right[8] > 200)
+                            {
+                                if (right_once == 0)
+                                {
+                                    right_once = 1;
+                                    sprintf(sendbuf,"moveJ(1,0,0,600,0,0,0,0.1)\n");
+                                    UDP_send(sendbuf);
+                                }
+                            }
+                            else {
+                                if (right_once == 1)
+                                {
+                                    right_once = 0;
+                                    sprintf(sendbuf,"stopMove(1)\n");
+                                    UDP_send(sendbuf);
+                                }
+                                
+                            }
                         }
-                        last_angle3 = angle3;
-                        sprintf(sendbuf,"moveFollow(3,%.3f,%.3f,%.3f,%.3f,%.3f)\n", angle3 * DEG2RAD, angle1 * DEG2RAD, -angle2 * DEG2RAD, angle2 * DEG2RAD, angle1 * DEG2RAD);
-                        
-                        sendto(sockCli, sendbuf, strlen(sendbuf)+1, 0, (struct sockaddr*)&addrSer, addrlen);
-                        sendbuf[strlen(sendbuf)] == '\0';
-                        ROS_INFO("%s",sendbuf);
-
                     }
                 }
                 sum = 0;
