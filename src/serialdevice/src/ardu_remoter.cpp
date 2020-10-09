@@ -29,16 +29,6 @@ char sendbuf[MAX_LENGTH];
 // ===========================================
 #define DEADZONE 50
 # define rDEADZONE 20
-#define MAX_x 1.0
-#define MAX_y 1.0
-#define MAX_z 1.0
-
-# define MAX_ARM_RX 0.1
-# define MAX_ARM_RY 0.1
-# define MAX_ARM_RZ 0.1
-# define MAX_ARM_X 0.1
-# define MAX_ARM_Y 0.1
-# define MAX_ARM_Z 0.1
 
 # define max_step_angle 10.0
 
@@ -157,6 +147,15 @@ int main (int argc, char** argv)
 	geometry_msgs::Twist cmd;
 
     uint8_t rec[2000] = {'\0'}; 
+    int intool = 0;
+    double armx;
+    double army;
+    double armz;
+    double armRx;
+    double armRy;
+    double armRz;
+    double carx;
+    double carz;
 
     //发布主题 
     ros::Publisher remo_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1000); 
@@ -165,6 +164,15 @@ int main (int argc, char** argv)
 	nh.param<std::string>("ardu_remoter_pub/port", param_port_path_, "/dev/remote_USB");
 	nh.param<int>("ardu_remoter_pub/baudrate", param_baudrate_, 9600);
 	nh.param<int>("ardu_remoter_pub/loop_rate", param_loop_rate_, 20);
+	nh.param<int>("ardu_remoter_pub/intool", intool, 0);
+	nh.param<double>("ardu_remoter_pub/armx", armx, 2);
+	nh.param<double>("ardu_remoter_pub/army", army, 2);
+	nh.param<double>("ardu_remoter_pub/armz", armz, 2);
+	nh.param<double>("ardu_remoter_pub/armRx", armRx, 3);
+	nh.param<double>("ardu_remoter_pub/armRy", armRy, 3);
+	nh.param<double>("ardu_remoter_pub/armRz", armRz, 3);
+	nh.param<double>("ardu_remoter_pub/carx", carx, 1);
+	nh.param<double>("ardu_remoter_pub/carz", carz, 1);
 
     nh.param<int>("robot_port",port, 0);
 	nh.param<std::string>("robot_ip",hostIP, "127.0.0.1");
@@ -299,12 +307,12 @@ int main (int argc, char** argv)
 
                     if (abs(rec_right[7]) < DEADZONE)       // 右手拨杆中位
                     {
-                        cmd.linear.x  = float( rec_right[2] * rec_right[1] ) / 450000.0 * MAX_x;
+                        cmd.linear.x  = float( rec_right[2] * rec_right[1] ) / 450000.0 * carx;
                         cmd.linear.y  = 0.0; //float( rec_right[2] ) * float( rec_right[0] ) / 450000.0 * MAX_y ;
                         cmd.linear.z  = 0;
                         cmd.angular.x = 0;
                         cmd.angular.y = 0;
-                        cmd.angular.z = float( rec_right[2] * rec_right[3] ) / 450000.0 * MAX_z ;
+                        cmd.angular.z = float( rec_right[2] * rec_right[3] ) / 450000.0 * carz ;
 
                         remo_pub.publish(cmd);
 
@@ -381,7 +389,7 @@ int main (int argc, char** argv)
                                 angle3 = last_angle3 - max_step_angle;
                             }
                             last_angle3 = angle3;
-                            sprintf(sendbuf,"moveFollow(3,%.3f,%.3f,%.3f,%.3f,%.3f)\n", angle3 * DEG2RAD, angle1 * DEG2RAD, -angle2 * DEG2RAD, angle2 * DEG2RAD, angle1 * DEG2RAD);
+                            sprintf(sendbuf,"moveFollow(3,%.3f,%.3f,%.3f,%.3f,%.3f)\n", angle3 * DEG2RAD, angle1 * DEG2RAD, angle2 * DEG2RAD, -angle2 * DEG2RAD, angle1 * DEG2RAD);
                             UDP_send(sendbuf);
                         }
 
@@ -411,7 +419,7 @@ int main (int argc, char** argv)
 
                             if (last_ldmode == STOP)
                             {
-                                sprintf(sendbuf,"moveJ(3,%.3f,%.3f,%.3f,%.3f,%.3f,0.3)\n", angle3, angle1, -angle2, angle2, angle1);
+                                sprintf(sendbuf,"moveJ(3,%.3f,%.3f,%.3f,%.3f,%.3f,0.3)\n", angle3, angle1, angle2, -angle2, angle1);
                                 UDP_send(sendbuf);
                             } 
                         }
@@ -424,12 +432,12 @@ int main (int argc, char** argv)
                             speedx = 0;
                             speedy = 0;
                             speedz = 0;
-                            speedRx = float( rec_right[1] ) / 450.0 * MAX_ARM_RX;
-                            speedRy = float( rec_right[3] ) / 450.0 * MAX_ARM_RY;
-                            speedRz = float( rec_right[0] ) / 450.0 * MAX_ARM_RZ;
+                            speedRx = float( rec_right[1] ) / 450.0 * armRx;
+                            speedRy = float( rec_right[3] ) / 450.0 * armRy;
+                            speedRz = float( rec_right[0] ) / 450.0 * armRz;
                             if(rec_right[8] > 200)
                             {
-                                sprintf(sendbuf,"speedL(0,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz);
+                                sprintf(sendbuf,"speedL(0,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz,intool);
                                 UDP_send(sendbuf);
                             }
                         }
@@ -437,12 +445,12 @@ int main (int argc, char** argv)
                             speedRx = 0;
                             speedRy = 0;
                             speedRz = 0;
-                            speedx = float( rec_right[1] ) / 450.0 * MAX_ARM_X;
-                            speedy = float( rec_right[3] ) / 450.0 * MAX_ARM_Y;
-                            speedz = float( rec_right[0] ) / 450.0 * MAX_ARM_Z;
+                            speedx = float( rec_right[1] ) / 450.0 * armx;
+                            speedy = float( rec_right[3] ) / 450.0 * army;
+                            speedz = float( rec_right[0] ) / 450.0 * armz;
                             if(rec_right[8] > 200)
                             {
-                                sprintf(sendbuf,"speedL(0,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz);
+                                sprintf(sendbuf,"speedL(0,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz,intool);
                                 UDP_send(sendbuf);
                             }
                         }
@@ -472,12 +480,12 @@ int main (int argc, char** argv)
                             speedx = 0;
                             speedy = 0;
                             speedz = 0;
-                            speedRx = float( rec_right[1] ) / 450.0 * MAX_ARM_RX;
-                            speedRy = float( rec_right[3] ) / 450.0 * MAX_ARM_RY;
-                            speedRz = float( rec_right[0] ) / 450.0 * MAX_ARM_RZ;
+                            speedRx = float( rec_right[1] ) / 450.0 * armRx;
+                            speedRy = float( rec_right[3] ) / 450.0 * armRy;
+                            speedRz = float( rec_right[0] ) / 450.0 * armRz;
                             if(rec_right[8] > 200)
                             {
-                                sprintf(sendbuf,"speedL(1,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz);
+                                sprintf(sendbuf,"speedL(1,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz, intool);
                                 UDP_send(sendbuf);
                             }
                         }
@@ -485,12 +493,12 @@ int main (int argc, char** argv)
                             speedRx = 0;
                             speedRy = 0;
                             speedRz = 0;
-                            speedx = float( rec_right[1] ) / 450.0 * MAX_ARM_X;
-                            speedy = float( rec_right[3] ) / 450.0 * MAX_ARM_Y;
-                            speedz = float( rec_right[0] ) / 450.0 * MAX_ARM_Z;
+                            speedx = float( rec_right[1] ) / 450.0 * armx;
+                            speedy = float( rec_right[3] ) / 450.0 * army;
+                            speedz = float( rec_right[0] ) / 450.0 * armz;
                             if(rec_right[8] > 200)
                             {
-                                sprintf(sendbuf,"speedL(1,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz);
+                                sprintf(sendbuf,"speedL(1,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz, intool);
                                 UDP_send(sendbuf);
                             }
                         }

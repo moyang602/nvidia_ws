@@ -1,6 +1,6 @@
 <launch>
 
-  <param name="robot_ip" type="string" value="192.168.50.21"/>  
+  <param name="robot_ip" type="string" value="192.168.8.11"/>  
   <param name="robot_port" type="int" value="8000"/>  
 
   <node name="ardu_remoter_pub" pkg="serialdevice" type="ardu_remoter_pub" output="screen" respawn="false">
@@ -8,6 +8,16 @@
   <param name="port"       value="/dev/ttyUSB0"/>  
   <param name="baudrate"   value="9600"/>
   <param name="loop_rate"   value="25"/>
+  <param name="intool"   value="1"/>
+  <param name="armx"   value="2"/>
+  <param name="army"   value="2"/>
+  <param name="armz"   value="2"/>
+  <param name="armRx"   value="3"/>
+  <param name="armRy"   value="3"/>
+  <param name="armRz"   value="3"/>
+  <param name="carx"   value="1"/>
+  <param name="carz"   value="1"/>
+
   </node>
 
 
