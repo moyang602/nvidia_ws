@@ -166,7 +166,7 @@ int main (int argc, char** argv)
 
     //发布主题 
     ros::Publisher remo_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1000); 
-    ros::Subscriber js_sub = nh.subscribe("joint_states", 10, js_callback);
+    ros::Subscriber js_sub = nh.subscribe("robot_joint_states", 10, js_callback);
     
 	nh.param<std::string>("ardu_remoter_pub/port", param_port_path_, "/dev/remote_USB");
 	nh.param<int>("ardu_remoter_pub/baudrate", param_baudrate_, 9600);
@@ -335,7 +335,7 @@ int main (int argc, char** argv)
                         }
                     }
 
-                    ROS_INFO("1:%d 2:%d 3:%d 4:%d 5:%d 6:%d 7:%d 8:%d 9:%d  ",rec_right[0],rec_right[1],rec_right[2],rec_right[3],rec_right[4],rec_right[5],rec_right[6],rec_right[7],rec_right[8]);
+                    // ROS_INFO("1:%d 2:%d 3:%d 4:%d 5:%d 6:%d 7:%d 8:%d 9:%d  ",rec_right[0],rec_right[1],rec_right[2],rec_right[3],rec_right[4],rec_right[5],rec_right[6],rec_right[7],rec_right[8]);
 
                     if (abs(rec_right[7]) < DEADZONE)       // 右手拨杆中位
                     {
@@ -514,7 +514,7 @@ int main (int argc, char** argv)
                             if(rec_right[8] > 200)
                             {
                                 left_once = 0;
-                                sprintf(sendbuf,"speedL(0,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz,beta_cmd, intool);
+                                sprintf(sendbuf,"speedL(0,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz, beta_cmd, intool);
                                 UDP_send(sendbuf);
                             }
                         }

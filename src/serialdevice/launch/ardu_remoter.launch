@@ -17,8 +17,8 @@
   <param name="armRz"   value="2"/>
   <param name="carx"   value="1"/>
   <param name="carz"   value="1"/>
-  <param name="leftarmbeta", value="1.0"/>
-  <param name="rightarmbeta", value="1.0"/>
+  <param name="leftarmbeta"  value="1.0"/>
+  <param name="rightarmbeta"  value="1.0"/>
 
   </node>
 
