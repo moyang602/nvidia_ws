@@ -27,7 +27,7 @@ socklen_t addrlen;
 char sendbuf[MAX_LENGTH];
 
 // ===========================================
-#define DEADZONE 50
+#define DEADZONE 20
 # define rDEADZONE 20
 
 # define max_step_angle 10.0
@@ -60,6 +60,8 @@ std::map<std::string, double> jsmap;
 std::map<std::string, double>::iterator iter;
 
 uint32_t watchdog = 0;
+uint32_t js_wd = 0;
+uint8_t js_ready = 0;
 
 std::vector<double> recf[CHANNEL];
 
@@ -127,6 +129,8 @@ void js_callback(const sensor_msgs::JointState &js)
         std::cout<<"Do not Find"<<std::endl;  
     }
     jsmap.clear();
+    js_wd = 0;
+    js_ready = 1;
 
     // printf("%f,%f,%f\n",js_angle[0], js_angle[1], js_angle[2]);
 }
@@ -173,6 +177,8 @@ int main (int argc, char** argv)
 	nh.param<double>("ardu_remoter_pub/armRz", armRz, 3);
 	nh.param<double>("ardu_remoter_pub/carx", carx, 1);
 	nh.param<double>("ardu_remoter_pub/carz", carz, 1);
+    nh.param<double>("ardu_remoter_pub/rightarmbeta", rightarmbeta, 1.0);
+    nh.param<double>("ardu_remoter_pub/leftarmbeta", leftarmbeta, 1.0);
 
     nh.param<int>("robot_port",port, 0);
 	nh.param<std::string>("robot_ip",hostIP, "127.0.0.1");
@@ -257,6 +263,13 @@ int main (int argc, char** argv)
             ser.read(rec,1);
             if (rec[0] == 0xaa)
             {
+                // jointstate接收看门狗
+                js_wd ++;
+                if (js_wd > 10)     // 反馈数据50Hz，遥控器大致25Hz，几乎每两个周期就会有一次清零机会
+                {
+                    js_wd = 0;
+                    js_ready = 0;
+                }
                 ser.read(rec+1,CHANNEL * 2 +1);
                 for(j = 0; j < CHANNEL ; ++j){
                     rec_right[j] = ( rec[2*j+1] <<8 ) + rec[2*j+2];
@@ -287,23 +300,32 @@ int main (int argc, char** argv)
                         else if(i >= 4 && i <= 6){
                             if(rec_right[i] > 500) rec_right[i] = 500;
                             if(rec_right[i] < -500) rec_right[i] = -500;
-                            if (abs(rec_right[i])<rDEADZONE) rec_right[i] = 0;
-
+                            
                             rec_right[i] = (int)(fillter((double)rec_right[i], i, 20));
-                            if (abs(rec_right[i] - lastrec[i]) <2 )
+                            if (abs(rec_right[i] - lastrec[i]) < 2 )
                             {
                                 rec_right[i] = lastrec[i];
                             }
                             lastrec[i] = rec_right[i];
+
+                            if (abs(rec_right[i])<rDEADZONE) rec_right[i] = 0;
+                            else{
+                                if (rec_right[i] > 0) rec_right[i] -= rDEADZONE;
+                                if (rec_right[i] < 0) rec_right[i] += rDEADZONE;
+                            }
                         }
                         else{
                             if(rec_right[i] > 500) rec_right[i] = 500;
                             if(rec_right[i] < -500) rec_right[i] = -500;
                             if (abs(rec_right[i])<DEADZONE) rec_right[i] = 0;
+                            else{
+                                if (rec_right[i] > 0) rec_right[i] -= DEADZONE;
+                                if (rec_right[i] < 0) rec_right[i] += DEADZONE;
+                            }
                         }
                     }
 
-                    // ROS_INFO("1:%d 2:%d 3:%d 4:%d 5:%d 6:%d 7:%d  ",rec_right[0],rec_right[1],rec_right[2],rec_right[3],rec_right[4],rec_right[5],rec_right[6]);
+                    ROS_INFO("1:%d 2:%d 3:%d 4:%d 5:%d 6:%d 7:%d 8:%d 9:%d  ",rec_right[0],rec_right[1],rec_right[2],rec_right[3],rec_right[4],rec_right[5],rec_right[6],rec_right[7],rec_right[8]);
 
                     if (abs(rec_right[7]) < DEADZONE)       // 右手拨杆中位
                     {
@@ -389,8 +411,11 @@ int main (int argc, char** argv)
                                 angle3 = last_angle3 - max_step_angle;
                             }
                             last_angle3 = angle3;
-                            sprintf(sendbuf,"moveFollow(3,%.3f,%.3f,%.3f,%.3f,%.3f)\n", angle3 * DEG2RAD, angle1 * DEG2RAD, angle2 * DEG2RAD, -angle2 * DEG2RAD, angle1 * DEG2RAD);
-                            UDP_send(sendbuf);
+                            
+                            if (js_ready == 1){
+                                sprintf(sendbuf,"moveFollow(3,%.3f,%.3f,%.3f,%.3f,%.3f)\n", angle3 * DEG2RAD, angle1 * DEG2RAD, angle2 * DEG2RAD, -angle2 * DEG2RAD, angle1 * DEG2RAD);
+                                UDP_send(sendbuf);
+                            }
                         }
 
                         if (ldmode == HUILING)
@@ -428,16 +453,35 @@ int main (int argc, char** argv)
                     }
                     else if (rec_right[7] > 400)        // 右手拨杆向前
                     {
+                        beta_cmd = float( rec_right[4] ) / 500.0 * leftarmbeta;
+                        if (leftarmbeta > 0){
+                            if (beta_cmd < 0){
+                                beta_cmd = 0;
+                            }
+                        }
+                        else if (leftarmbeta < 0){
+                            if (beta_cmd > 0){
+                                beta_cmd = 0;
+                            }
+                        }
+
+                        if (rec_right[5] > 0){
+                            intool = 1;
+                        }
+                        else {
+                            intool = 0;
+                        }
+
                         if (rec_right[2] > 600 && rec_right[2] < 800){
                             speedx = 0;
                             speedy = 0;
                             speedz = 0;
-                            speedRx = float( rec_right[1] ) / 450.0 * armRx;
-                            speedRy = float( rec_right[3] ) / 450.0 * armRy;
-                            speedRz = float( rec_right[0] ) / 450.0 * armRz;
+                            speedRx = float( rec_right[1] ) / 500.0 * armRx;
+                            speedRy = float( rec_right[3] ) / 500.0 * armRy;
+                            speedRz = float( rec_right[0] ) / 500.0 * armRz;
                             if(rec_right[8] > 200)
                             {
-                                sprintf(sendbuf,"speedL(0,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz,intool);
+                                sprintf(sendbuf,"speedL(0,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz,beta_cmd, intool);
                                 UDP_send(sendbuf);
                             }
                         }
@@ -445,12 +489,12 @@ int main (int argc, char** argv)
                             speedRx = 0;
                             speedRy = 0;
                             speedRz = 0;
-                            speedx = float( rec_right[1] ) / 450.0 * armx;
-                            speedy = float( rec_right[3] ) / 450.0 * army;
-                            speedz = float( rec_right[0] ) / 450.0 * armz;
+                            speedx = float( rec_right[1] ) / 500.0 * armx;
+                            speedy = float( rec_right[3] ) / 500.0 * army;
+                            speedz = float( rec_right[0] ) / 500.0 * armz;
                             if(rec_right[8] > 200)
                             {
-                                sprintf(sendbuf,"speedL(0,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz,intool);
+                                sprintf(sendbuf,"speedL(0,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz, beta_cmd,intool);
                                 UDP_send(sendbuf);
                             }
                         }
@@ -460,7 +504,7 @@ int main (int argc, char** argv)
                                 if (left_once == 1)
                                 {
                                     left_once = 0;
-                                    sprintf(sendbuf,"moveJ(0,0,0,600,0,0,0,0.1)\n");
+                                    sprintf(sendbuf,"moveJ(0,0,0,600,0,0,0,0.3)\n");
                                     UDP_send(sendbuf);
                                 }
                             }
@@ -476,16 +520,35 @@ int main (int argc, char** argv)
                     }
                     else if (rec_right[7] < -400)       // 右手拨杆向后
                     {
+                        beta_cmd = float( rec_right[4] ) / 500.0 * rightarmbeta;
+                        if (rightarmbeta > 0){
+                            if (beta_cmd < 0){
+                                beta_cmd = 0;
+                            }
+                        }
+                        else if (rightarmbeta < 0){
+                            if (beta_cmd > 0){
+                                beta_cmd = 0;
+                            }
+                        }
+
+                        if (rec_right[5] > 0){
+                            intool = 1;
+                        }
+                        else {
+                            intool = 0;
+                        }
+
                         if (rec_right[2] > 600 && rec_right[2] < 800){
                             speedx = 0;
                             speedy = 0;
                             speedz = 0;
-                            speedRx = float( rec_right[1] ) / 450.0 * armRx;
-                            speedRy = float( rec_right[3] ) / 450.0 * armRy;
-                            speedRz = float( rec_right[0] ) / 450.0 * armRz;
+                            speedRx = float( rec_right[1] ) / 500.0 * armRx;
+                            speedRy = float( rec_right[3] ) / 500.0 * armRy;
+                            speedRz = float( rec_right[0] ) / 500.0 * armRz;
                             if(rec_right[8] > 200)
                             {
-                                sprintf(sendbuf,"speedL(1,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz, intool);
+                                sprintf(sendbuf,"speedL(1,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz, beta_cmd, intool);
                                 UDP_send(sendbuf);
                             }
                         }
@@ -493,12 +556,12 @@ int main (int argc, char** argv)
                             speedRx = 0;
                             speedRy = 0;
                             speedRz = 0;
-                            speedx = float( rec_right[1] ) / 450.0 * armx;
-                            speedy = float( rec_right[3] ) / 450.0 * army;
-                            speedz = float( rec_right[0] ) / 450.0 * armz;
+                            speedx = float( rec_right[1] ) / 500.0 * armx;
+                            speedy = float( rec_right[3] ) / 500.0 * army;
+                            speedz = float( rec_right[0] ) / 500.0 * armz;
                             if(rec_right[8] > 200)
                             {
-                                sprintf(sendbuf,"speedL(1,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz, intool);
+                                sprintf(sendbuf,"speedL(1,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz, beta_cmd, intool);
                                 UDP_send(sendbuf);
                             }
                         }
@@ -508,7 +571,7 @@ int main (int argc, char** argv)
                                 if (right_once == 0)
                                 {
                                     right_once = 1;
-                                    sprintf(sendbuf,"moveJ(1,0,0,600,0,0,0,0.1)\n");
+                                    sprintf(sendbuf,"moveJ(1,0,0,600,0,0,0,0.3)\n");
                                     UDP_send(sendbuf);
                                 }
                             }
