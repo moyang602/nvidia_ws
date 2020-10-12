@@ -248,11 +248,18 @@ int main (int argc, char** argv)
 
     int left_once = 0;
     int right_once = 0;
+    int first_lock = 1;
+    int enonce = 0;
     
     while(ros::ok()) 
     { 
         // while(ser.available() < 10);
         if(ser.available()){
+            if (first_lock == 0)
+            {
+                first_lock = 1;
+                printf("Armed\n");
+            }
             watchdog = 0;
             ser.read(rec,1);
             if (rec[0] == 0xaa)
@@ -323,6 +330,28 @@ int main (int argc, char** argv)
                             {   
                                 sprintf(sendbuf,"stopMove(3)\n");
                                 UDP_send(sendbuf);
+                            }
+
+                            if(rec_right[8] > 200){
+                                if (rec_right[1] > 400){
+                                    if (enonce == 0){
+                                        enonce = 1;
+                                        sprintf(sendbuf,"EnMotor(3,-1)\n");
+                                        UDP_send(sendbuf);
+                                        sprintf(sendbuf,"EnMotor(4,-1)\n");
+                                        UDP_send(sendbuf);
+                                    }
+                                }
+                                else if (rec_right[1] < -400)
+                                {
+                                    if (enonce == 1){
+                                        enonce = 0;
+                                        sprintf(sendbuf,"DisMotor(3,-1)\n");
+                                        UDP_send(sendbuf);
+                                        sprintf(sendbuf,"DisMotor(4,-1)\n");
+                                        UDP_send(sendbuf);
+                                    }
+                                }
                             }
                         }
                         else if(rec_right[0] > 400 && last_ldmode == STOP)        // 右手摇杆打左
@@ -428,7 +457,7 @@ int main (int argc, char** argv)
                     }
                     else if (rec_right[7] > 400)        // 右手拨杆向前
                     {
-                        if (rec_right[2] > 600 && rec_right[2] < 800){
+                        if (rec_right[2] > 450 && rec_right[2] < 800){
                             speedx = 0;
                             speedy = 0;
                             speedz = 0;
@@ -437,6 +466,7 @@ int main (int argc, char** argv)
                             speedRz = float( rec_right[0] ) / 450.0 * armRz;
                             if(rec_right[8] > 200)
                             {
+                                left_once = 0;
                                 sprintf(sendbuf,"speedL(0,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz,intool);
                                 UDP_send(sendbuf);
                             }
@@ -450,6 +480,7 @@ int main (int argc, char** argv)
                             speedz = float( rec_right[0] ) / 450.0 * armz;
                             if(rec_right[8] > 200)
                             {
+                                left_once = 0;
                                 sprintf(sendbuf,"speedL(0,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz,intool);
                                 UDP_send(sendbuf);
                             }
@@ -464,13 +495,14 @@ int main (int argc, char** argv)
                                     UDP_send(sendbuf);
                                 }
                             }
-                            else {
-                                if (left_once == 0)
-                                {
-                                    left_once = 1;
-                                    sprintf(sendbuf,"stopMove(0)\n");
-                                    UDP_send(sendbuf);
-                                }
+                        }
+
+                        if (rec_right[8] < 150) {
+                            if (left_once == 0)
+                            {
+                                left_once = 1;
+                                sprintf(sendbuf,"stopMove(0)\n");
+                                UDP_send(sendbuf);
                             }
                         }
                     }
@@ -532,6 +564,11 @@ int main (int argc, char** argv)
             watchdog++;
             if (watchdog > param_loop_rate_ * 3){  // 3秒检测不到则认为已经加锁
                 watchdog = 0;
+                if (first_lock == 1)
+                {
+                    first_lock = 0;
+                    printf("DisArmed\n");
+                }
             }
         }    
         //处理ROS的信息，比如订阅消息,并调用回调函数 

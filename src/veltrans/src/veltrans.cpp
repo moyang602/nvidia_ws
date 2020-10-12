@@ -38,10 +38,7 @@ void callback(const geometry_msgs::Twist& cmd_vel)
 	double v = cmd_vel.linear.x;
 	double w = cmd_vel.angular.z;
 	sprintf(sendbuf, "carMove(%.3f,%.3f)\n", v, w);
-	ROS_INFO("in");
-
 	sendto(sockCli, sendbuf, strlen(sendbuf)+1, 0, (struct sockaddr*)&addrSer, addrlen);
-
 }
 
 /**
@@ -70,7 +67,7 @@ int main(int argc, char *argv[])
  
     addrlen = sizeof(struct sockaddr);
 
-    ROS_INFO("udp init ok,IP:%s,port %d", hostIP.c_str(), port);
+    ROS_INFO("veltrans udp init ok,IP:%s,port %d", hostIP.c_str(), port);
 
 	ros::Rate loop_rate(1000);
 

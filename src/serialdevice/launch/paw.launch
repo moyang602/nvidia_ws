@@ -1,0 +1,17 @@
+<launch>
+  <node name="paw" pkg="serialdevice" type="paw_node" output="screen" respawn="false">
+    
+    <param name="leftpaw_use"   value="0"/>
+    <param name="leftpaw_port"       value="/dev/leftpaw"/>  
+    <param name="leftpaw_baudrate"   value="9600"/>
+
+    <param name="rightpaw_use"   value="1"/>
+    <param name="rightpaw_port"   value="/dev/righttpaw"/>
+    <param name="rightpaw_baudrate"   value="9600"/>
+    
+    <param name="loop_rate"   value="20"/>
+  </node>
+</launch>
+
+
+

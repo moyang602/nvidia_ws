@@ -1,1 +1,4 @@
-float32 PawPosition
+float32 leftPawPosition
+float32 rightPawPosition
+float32 leftPawCurrent
+float32 rightPawCurrent

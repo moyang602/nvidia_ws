@@ -49,21 +49,16 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 #  add_message_files(
 #    FILES
-#    EndEffector.msg
-#    heightNow.msg
 #  )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
 #   FILES
-#   SetHeight.srv
 # )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
 #   FILES
-#   Action1.action
-#   Action2.action
 # )
 
 ## Generate added messages and services with any dependencies listed here
@@ -212,5 +207,13 @@ add_executable(ardu_remoter_pub
 )
 add_dependencies(ardu_remoter_pub ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(ardu_remoter_pub
+  ${catkin_LIBRARIES}
+)
+
+add_executable(paw_node
+  src/paw_node.cpp
+)
+add_dependencies(paw_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(paw_node
   ${catkin_LIBRARIES}
 )
