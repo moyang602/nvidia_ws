@@ -583,6 +583,7 @@ int main (int argc, char** argv)
                             speedRz = float( rec_right[0] ) / 500.0 * armRz;
                             if(rec_right[8] > 200)
                             {
+                                right_once = 0;
                                 sprintf(sendbuf,"speedL(1,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz, beta_cmd, intool);
                                 UDP_send(sendbuf);
                             }
@@ -596,6 +597,7 @@ int main (int argc, char** argv)
                             speedz = float( rec_right[0] ) / 500.0 * armz;
                             if(rec_right[8] > 200)
                             {
+                                right_once = 0;
                                 sprintf(sendbuf,"speedL(1,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz, beta_cmd, intool);
                                 UDP_send(sendbuf);
                             }
@@ -603,21 +605,21 @@ int main (int argc, char** argv)
                         else if (rec_right[2] > 880){
                             if(rec_right[8] > 200)
                             {
-                                if (right_once == 0)
+                                if (right_once == 1)
                                 {
-                                    right_once = 1;
+                                    right_once = 0;
                                     sprintf(sendbuf,"moveJ(1,0,0,600,0,0,0,0.3)\n");
                                     UDP_send(sendbuf);
                                 }
                             }
-                            else {
-                                if (right_once == 1)
-                                {
-                                    right_once = 0;
-                                    sprintf(sendbuf,"stopMove(1)\n");
-                                    UDP_send(sendbuf);
-                                }
-                                
+                        }
+
+                        if (rec_right[8] < 150) {
+                            if (right_once == 0)
+                            {
+                                right_once = 1;
+                                sprintf(sendbuf,"stopMove(1)\n");
+                                UDP_send(sendbuf);
                             }
                         }
                     }
