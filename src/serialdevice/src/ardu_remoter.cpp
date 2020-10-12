@@ -528,7 +528,7 @@ int main (int argc, char** argv)
                             if(rec_right[8] > 200)
                             {
                                 left_once = 0;
-                                sprintf(sendbuf,"speedL(0,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz,intool);
+                                sprintf(sendbuf,"speedL(0,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz, beta_cmd,intool);
                                 UDP_send(sendbuf);
                             }
                         }
@@ -538,7 +538,7 @@ int main (int argc, char** argv)
                                 if (left_once == 1)
                                 {
                                     left_once = 0;
-                                    sprintf(sendbuf,"moveJ(0,0,0,600,0,0,0,0.1)\n");
+                                    sprintf(sendbuf,"moveJ(0,0,0,600,0,0,0,0.3)\n");
                                     UDP_send(sendbuf);
                                 }
                             }
@@ -583,7 +583,7 @@ int main (int argc, char** argv)
                             speedRz = float( rec_right[0] ) / 500.0 * armRz;
                             if(rec_right[8] > 200)
                             {
-                                sprintf(sendbuf,"speedL(1,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz, intool);
+                                sprintf(sendbuf,"speedL(1,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz, beta_cmd, intool);
                                 UDP_send(sendbuf);
                             }
                         }
@@ -596,7 +596,7 @@ int main (int argc, char** argv)
                             speedz = float( rec_right[0] ) / 500.0 * armz;
                             if(rec_right[8] > 200)
                             {
-                                sprintf(sendbuf,"speedL(1,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz, intool);
+                                sprintf(sendbuf,"speedL(1,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d)\n", speedx, speedy, speedz, speedRx, speedRy, speedRz, beta_cmd, intool);
                                 UDP_send(sendbuf);
                             }
                         }
@@ -606,7 +606,7 @@ int main (int argc, char** argv)
                                 if (right_once == 0)
                                 {
                                     right_once = 1;
-                                    sprintf(sendbuf,"moveJ(1,0,0,600,0,0,0,0.1)\n");
+                                    sprintf(sendbuf,"moveJ(1,0,0,600,0,0,0,0.3)\n");
                                     UDP_send(sendbuf);
                                 }
                             }
