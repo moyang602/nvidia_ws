@@ -166,12 +166,11 @@ int main (int argc, char** argv)
 
     //发布主题 
     ros::Publisher remo_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1000); 
-    ros::Subscriber js_sub = nh.subscribe("robot_joint_states", 10, js_callback);
+    ros::Subscriber js_sub = nh.subscribe("joint_states", 10, js_callback);
     
 	nh.param<std::string>("ardu_remoter_pub/port", param_port_path_, "/dev/remote_USB");
 	nh.param<int>("ardu_remoter_pub/baudrate", param_baudrate_, 9600);
 	nh.param<int>("ardu_remoter_pub/loop_rate", param_loop_rate_, 20);
-	nh.param<int>("ardu_remoter_pub/intool", intool, 0);
 	nh.param<double>("ardu_remoter_pub/armx", armx, 2);
 	nh.param<double>("ardu_remoter_pub/army", army, 2);
 	nh.param<double>("ardu_remoter_pub/armz", armz, 2);
@@ -259,6 +258,8 @@ int main (int argc, char** argv)
     int right_once = 0;
     int first_lock = 1;
     int enonce = 0;
+    int rightenonce = 0;
+    int leftenonce = 0;
     
     while(ros::ok()) 
     { 
@@ -369,14 +370,19 @@ int main (int argc, char** argv)
                                 }
                                 else if (rec_right[1] < -400)
                                 {
-                                    if (enonce == 1){
-                                        enonce = 0;
+                                    if (enonce == 0){
+                                        enonce = 1;
                                         sprintf(sendbuf,"DisMotor(3,-1)\n");
                                         UDP_send(sendbuf);
                                         sprintf(sendbuf,"DisMotor(4,-1)\n");
                                         UDP_send(sendbuf);
                                     }
                                 }
+                                else if (abs(rec_right[1]) < DEADZONE)
+                                {
+                                    enonce = 0;
+                                }
+                                
                             }
                         }
                         else if(rec_right[0] > 400 && last_ldmode == STOP)        // 右手摇杆打左
@@ -551,6 +557,29 @@ int main (int argc, char** argv)
                                 sprintf(sendbuf,"stopMove(0)\n");
                                 UDP_send(sendbuf);
                             }
+
+                            if (rec_right[0] > 400)
+                            {
+                                if (rec_right[1] > 400){
+                                    if (leftenonce == 0){
+                                        leftenonce = 1;
+                                        sprintf(sendbuf,"EnMotor(0,-1)\n");
+                                        UDP_send(sendbuf);
+                                    }
+                                }
+                                else if (rec_right[1] < -400)
+                                {
+                                    if (leftenonce == 0){
+                                        leftenonce = 1;
+                                        sprintf(sendbuf,"DisMotor(0,-1)\n");
+                                        UDP_send(sendbuf);
+                                    }
+                                }
+                                else if (abs(rec_right[1]) < DEADZONE)
+                                {
+                                    leftenonce = 0;
+                                }
+                            }
                         }
                     }
                     else if (rec_right[7] < -400)       // 右手拨杆向后
@@ -611,6 +640,29 @@ int main (int argc, char** argv)
                                     sprintf(sendbuf,"moveJ(1,0,0,600,0,0,0,0.3)\n");
                                     UDP_send(sendbuf);
                                 }
+                            }
+                        }
+
+                        if (rec_right[0] > 400)
+                        {
+                            if (rec_right[1] > 400){
+                                if (rightenonce == 0){
+                                    rightenonce = 1;
+                                    sprintf(sendbuf,"EnMotor(1,-1)\n");
+                                    UDP_send(sendbuf);
+                                }
+                            }
+                            else if (rec_right[1] < -400)
+                            {
+                                if (rightenonce == 0){
+                                    rightenonce = 1;
+                                    sprintf(sendbuf,"DisMotor(1,-1)\n");
+                                    UDP_send(sendbuf);
+                                }
+                            }
+                            else if (abs(rec_right[1]) < DEADZONE)
+                            {
+                                rightenonce = 0;
                             }
                         }
 

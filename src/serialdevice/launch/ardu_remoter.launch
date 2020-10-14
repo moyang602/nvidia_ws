@@ -8,7 +8,6 @@
   <!-- <param name="port"       value="/dev/ttyUSB0"/>   -->
   <param name="baudrate"   value="9600"/>
   <param name="loop_rate"   value="25"/>
-  <param name="intool"   value="1"/>
   <param name="armx"   value="1"/>
   <param name="army"   value="1"/>
   <param name="armz"   value="1"/>
@@ -18,7 +17,7 @@
   <param name="carx"   value="1"/>
   <param name="carz"   value="1"/>
   <param name="leftarmbeta"  value="1.0"/>
-  <param name="rightarmbeta"  value="1.0"/>
+  <param name="rightarmbeta"  value="-1.0"/>
 
   </node>
 

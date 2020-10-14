@@ -7,7 +7,7 @@
         <!-- 3 default -->
     </node>
     
-    <!-- <node pkg="tf" type="static_transform_publisher" name="t1" args="0.126 0 0 0 1.5707963 0  /leftarm_link7 /toollink_l 0" />
-    <node pkg="tf" type="static_transform_publisher" name="t2" args="0.126 0 0 0 1.5707963 0  /rightarm_link7 /toollink_r 0" /> -->
+    <node pkg="tf" type="static_transform_publisher" name="t1" args="0.126 0 0 0 1.5707963 0  /leftarm_link7 /toollink_l 10" />
+    <node pkg="tf" type="static_transform_publisher" name="t2" args="0.126 0 0 0 1.5707963 0  /rightarm_link7 /toollink_r 10" />
 
 </launch>
