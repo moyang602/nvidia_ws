@@ -210,6 +210,14 @@ target_link_libraries(ardu_remoter_pub
   ${catkin_LIBRARIES}
 )
 
+add_executable(sbus_remoter_pub
+  src/sbus_remoter.cpp
+)
+add_dependencies(sbus_remoter_pub ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(sbus_remoter_pub
+  ${catkin_LIBRARIES}
+)
+
 add_executable(paw_node
   src/paw_node.cpp
 )

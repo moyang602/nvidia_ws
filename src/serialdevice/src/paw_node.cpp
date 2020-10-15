@@ -46,9 +46,6 @@ void write_callback_pawcmd(const serial_dev_msgs::Paw & pawcmd)
         cmd[3] = 0x55;
         rightser.write(cmd,4);
     }
-
-    
-    
     //ser.write(msg->data);   //发送串口数据 
 } 
 
