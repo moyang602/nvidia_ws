@@ -241,6 +241,7 @@ int main (int argc, char** argv)
                     {
                         rec_right[i] -= 512;
                     }
+                    ROS_INFO("1:%d 2:%d 3:%d 4:%d 5:%d 6:%d 7:%d 8:%d 9:%d 10:%d 11:%d  ",rec_right[0],rec_right[1],rec_right[2],rec_right[3],rec_right[4],rec_right[5],rec_right[6],rec_right[7],rec_right[8],rec_right[9],rec_right[10]);
                     
                     for (i= 0; i < 8 ;i++){
                         if(i == 3){      // 需要滤波的通道（绝对通道）
@@ -275,7 +276,6 @@ int main (int argc, char** argv)
                         }
                     }
 
-                    // ROS_INFO("1:%d 2:%d 3:%d 4:%d 5:%d 6:%d 7:%d 8:%d 9:%d 10:%d 11:%d  ",rec_right[0],rec_right[1],rec_right[2],rec_right[3],rec_right[4],rec_right[5],rec_right[6],rec_right[7],rec_right[8],rec_right[9],rec_right[10]);
 
 
                     // 得到遥控器的通道数据，进行通道映射
@@ -363,7 +363,7 @@ int main (int argc, char** argv)
                 ser.flushInput(); 
             }
         }
-        ROS_INFO("in");
+        // ROS_INFO("in");
         //处理ROS的信息，比如订阅消息,并调用回调函数 
         ros::spinOnce(); 
         loop_rate.sleep(); 

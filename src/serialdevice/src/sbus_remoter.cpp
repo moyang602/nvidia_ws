@@ -276,7 +276,7 @@ int main (int argc, char** argv)
 
     int left_once = 0;
     int right_once = 0;
-    int first_lock = 1;
+    int first_lock = 0;
     int enonce = 0;
     int rightenonce = 0;
     int leftenonce = 0;
@@ -382,34 +382,35 @@ int main (int argc, char** argv)
 
                             remo_pub.publish(cmd);
 
-                            if(rec_right[0] > 400 && rec_right[2] < DEADZONE)        // 右手摇杆打左
-                            {   
-                                if (rec_right[1] > 400){
-                                    if (enonce == 0){
-                                        enonce = 1;
-                                        sprintf(sendbuf,"EnMotor(3,-1)\n");
-                                        UDP_send(sendbuf);
-                                        sprintf(sendbuf,"EnMotor(4,-1)\n");
-                                        UDP_send(sendbuf);
-                                    }
-                                }
-                                else if (rec_right[1] < -400)
-                                {
-                                    if (enonce == 0){
-                                        enonce = 1;
-                                        sprintf(sendbuf,"DisMotor(3,-1)\n");
-                                        UDP_send(sendbuf);
-                                        sprintf(sendbuf,"DisMotor(4,-1)\n");
-                                        UDP_send(sendbuf);
-                                    }
-                                }
-                                else if (abs(rec_right[1]) < DEADZONE)
-                                {
-                                    enonce = 0;
-                                }
-                            }
-
                             if (!(rec_right[11] < 0)){      // enable
+
+                                if(rec_right[0] > 400 && rec_right[2] < DEADZONE)        // 右手摇杆打左
+                                {   
+                                    if (rec_right[1] > 400){
+                                        if (enonce == 0){
+                                            enonce = 1;
+                                            sprintf(sendbuf,"EnMotor(3,-1)\n");
+                                            UDP_send(sendbuf);
+                                            sprintf(sendbuf,"EnMotor(4,-1)\n");
+                                            UDP_send(sendbuf);
+                                        }
+                                    }
+                                    else if (rec_right[1] < -400)
+                                    {
+                                        if (enonce == 0){
+                                            enonce = 1;
+                                            sprintf(sendbuf,"DisMotor(3,-1)\n");
+                                            UDP_send(sendbuf);
+                                            sprintf(sendbuf,"DisMotor(4,-1)\n");
+                                            UDP_send(sendbuf);
+                                        }
+                                    }
+                                    else if (abs(rec_right[1]) < DEADZONE)
+                                    {
+                                        enonce = 0;
+                                    }
+                                }
+
                                 if (abs(rec_right[0]) < DEADZONE ){  // 中位
                                     if (guanjie_ref == 0){
                                         guanjie_ref = 1;
