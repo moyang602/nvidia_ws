@@ -7,24 +7,27 @@
    <!-- <param name="port"       value="/dev/remote_USB"/>   -->
     <param name="port"       value="/dev/ttyUSB3"/>  
     <param name="baudrate"   value="9600"/>
-    <param name="loop_rate"   value="150"/>
-    <param name="armx"   value="0.5"/>
-    <param name="army"   value="0.5"/>
-    <param name="armz"   value="0.5"/>
-    <param name="armRx"   value="1"/>
-    <param name="armRy"   value="1"/>
-    <param name="armRz"   value="1"/>
+    <param name="loop_rate"   value="25"/>
+    <param name="armx"   value="1"/>
+    <param name="army"   value="1"/>
+    <param name="armz"   value="1"/>
+    <param name="armRx"   value="2"/>
+    <param name="armRy"   value="2"/>
+    <param name="armRz"   value="2"/>
     <param name="leftarmbeta"  value="1.0"/>
     <param name="rightarmbeta"  value="-1.0"/>
   </node>
-  
-  <!-- <node pkg="manipulator" type="car_manipulator_pub" name="car_manipulator">
+<!--   
+  <node pkg="manipulator" type="car_manipulator_pub" name="car_manipulator" output="screen">
     <param name="port"       value="/dev/remote_USB"/>  
     <param name="port"       value="/dev/ttyUSB0"/>  
     <param name="baudrate"   value="9600"/>
     <param name="loop_rate"   value="25"/>
     <param name="carx"   value="1"/>
     <param name="carz"   value="1"/>
+    <param name="carxi"   value="90.0"/>
+    <param name="carkua"   value="90.0"/>
+    <param name="caryao"   value="90.0"/>
   </node> -->
 
 </launch>

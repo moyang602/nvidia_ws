@@ -104,12 +104,14 @@ void js_callback(const sensor_msgs::JointState &js)
         jsmap.insert(std::pair<std::string, double>(js.name.at(i).c_str(), js.position.at(i)));
     }
 
+    js_ready = 1;
     iter = jsmap.find("leftleg_joint2");  
     if(iter != jsmap.end())  {
         js_angle[0] = iter->second;
         // std::cout<<"Find, the value is "<<iter->second<<std::endl; 
     } 
     else{
+        js_ready = 0;
         std::cout<<"Do not Find"<<std::endl;  
     }
 
@@ -119,6 +121,7 @@ void js_callback(const sensor_msgs::JointState &js)
         // std::cout<<"Find, the value is "<<iter->second<<std::endl;  
     }
     else  {
+        js_ready = 0;
         std::cout<<"Do not Find"<<std::endl;  
     }
 
@@ -129,11 +132,11 @@ void js_callback(const sensor_msgs::JointState &js)
     }
     else
     {
+        js_ready = 0;
         std::cout<<"Do not Find"<<std::endl;  
     }
     jsmap.clear();
     js_wd = 0;
-    js_ready = 1;
 
     // printf("%f,%f,%f\n",js_angle[0], js_angle[1], js_angle[2]);
 }
@@ -156,9 +159,12 @@ int main (int argc, char** argv)
     uint8_t rec[2000] = {'\0'}; 
     double carx;
     double carz;
+    double carxi;
+    double carkua;
+    double caryao;
 
     //发布主题 
-    ros::Publisher remo_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1000); 
+    ros::Publisher remo_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel_remote", 1000); 
     ros::Subscriber js_sub = nh.subscribe("joint_states", 10, js_callback);
     
 	nh.param<std::string>("car_manipulator/port", param_port_path_, "/dev/remote_USB");
@@ -166,6 +172,9 @@ int main (int argc, char** argv)
 	nh.param<int>("car_manipulator/loop_rate", param_loop_rate_, 20);
 	nh.param<double>("car_manipulator/carx", carx, 1);
 	nh.param<double>("car_manipulator/carz", carz, 1);
+	nh.param<double>("car_manipulator/carxi", carxi, 90);
+	nh.param<double>("car_manipulator/carkua", carkua, 90);
+	nh.param<double>("car_manipulator/caryao", caryao, 90);
 
     nh.param<int>("robot_port",port, 0);
 	nh.param<std::string>("robot_ip",hostIP, "127.0.0.1");
@@ -222,12 +231,15 @@ int main (int argc, char** argv)
     double ref_rot[3] = {0.0};
     double ref_ang[3] = {0.0};
 
-    int ldmode;
-    int last_ldmode;
-
     int first_lock = 1;
     int enonce = 0;
+
+    int huiling_ref = 0;
+    int huiling_flag = 0;
+    int guanjie_ref = 0;
+    int moving = 0;
     
+    ser.flushInput();
     while(ros::ok()) 
     { 
         // while(ser.available() < 10);
@@ -235,7 +247,7 @@ int main (int argc, char** argv)
             if (first_lock == 0)
             {
                 first_lock = 1;
-                printf("Car Manipulator Armed\n");
+                ROS_INFO("Car Manipulator Armed\n");
             }
             watchdog = 0;
             ser.read(rec,1);
@@ -255,7 +267,7 @@ int main (int argc, char** argv)
                     sum += rec[2*j+2];
                 }
                 sum += 0xaa;
-                //ROS_INFO("sum=%x;rec[9]=%x\n",sum,rec[9]);
+                // ROS_INFO("sum=%x;rec[9]=%x\n",sum,rec[19]);
                 if (rec[CHANNEL * 2 +1] == sum ){
                     //ROS_INFO("ok\n");
                     for (i = 0; i< CHANNEL; i++)
@@ -316,155 +328,186 @@ int main (int argc, char** argv)
 
                         remo_pub.publish(cmd);
 
-                        if (abs(rec_right[0] ) <DEADZONE)
+                        if(rec_right[0] > 400 && rec_right[2] < DEADZONE && rec_right[8] < 150)        // 右手摇杆打左
                         {
-                            ldmode = STOP;
-                            if (last_ldmode == HUILING)
-                            {   
+                            if (rec_right[1] > 400){
+                                if (enonce == 0){
+                                    enonce = 1;
+                                    sprintf(sendbuf,"EnMotor(3,-1)\n");
+                                    UDP_send(sendbuf);
+                                    sprintf(sendbuf,"EnMotor(4,-1)\n");
+                                    UDP_send(sendbuf);
+                                }
+                            }
+                            else if (rec_right[1] < -400)
+                            {
+                                if (enonce == 0){
+                                    enonce = 1;
+                                    sprintf(sendbuf,"DisMotor(3,-1)\n");
+                                    UDP_send(sendbuf);
+                                    sprintf(sendbuf,"DisMotor(4,-1)\n");
+                                    UDP_send(sendbuf);
+                                }
+                            }
+                            else if (abs(rec_right[1]) < DEADZONE)
+                            {
+                                enonce = 0;
+                            }
+                        }
+
+                        if (rec_right[8] > 200){      // enable
+                            if (abs(rec_right[0]) < DEADZONE ){  // 中位
+                                if (guanjie_ref == 0){
+                                    guanjie_ref = 1;
+                                    ref_rot[0] = rec_right[4];
+                                    ref_rot[1] = rec_right[5];
+                                    ref_rot[2] = rec_right[6];
+
+                                    ref_ang[0] = js_angle[0];
+                                    ref_ang[1] = js_angle[1];
+                                    ref_ang[2] = js_angle[2];
+
+                                    angle1 = (double)(rec_right[4] - ref_rot[0]) /500.0 * carxi + ref_ang[0] * RAD2DEG;
+                                    angle2 = (double)(rec_right[5] - ref_rot[1]) /500.0 * carkua + ref_ang[1] * RAD2DEG;
+                                    angle3 = (double)(rec_right[6] - ref_rot[2]) /500.0 * caryao + ref_ang[2] * RAD2DEG;
+
+                                    last_angle1 = angle1;
+                                    last_angle2 = angle2;
+                                    last_angle3 = angle3;
+                                }
+
+                                if (guanjie_ref == 1){
+                                    angle1 = (double)(rec_right[4] - ref_rot[0]) /500.0 * carxi + ref_ang[0] * RAD2DEG;
+                                    angle2 = (double)(rec_right[5] - ref_rot[1]) /500.0 * carkua + ref_ang[1] * RAD2DEG;
+                                    angle3 = (double)(rec_right[6] - ref_rot[2]) /500.0 * caryao + ref_ang[2] * RAD2DEG;
+
+                                    if (angle1 - last_angle1 > max_step_angle)
+                                    {
+                                        angle1 = last_angle1 + max_step_angle;
+                                    }
+                                    else if (angle1 - last_angle1 < -max_step_angle)
+                                    {
+                                        angle1 = last_angle1 - max_step_angle;
+                                    }
+                                    last_angle1 = angle1;
+
+                                    if (angle2 - last_angle2 > max_step_angle)
+                                    {
+                                        angle2 = last_angle2 + max_step_angle;
+                                    }
+                                    else if (angle2 - last_angle2 < -max_step_angle)
+                                    {
+                                        angle2 = last_angle2 - max_step_angle;
+                                    }
+                                    last_angle2 = angle2;
+
+                                    if (angle3 - last_angle3 > max_step_angle)
+                                    {
+                                        angle3 = last_angle3 + max_step_angle;
+                                    }
+                                    else if (angle3 - last_angle3 < -max_step_angle)
+                                    {
+                                        angle3 = last_angle3 - max_step_angle;
+                                    }
+                                    last_angle3 = angle3;
+                                    
+                                    if (js_ready == 1){
+                                        moving = 1;
+                                        sprintf(sendbuf,"moveFollow(3,%.3f,%.3f,%.3f,%.3f,%.3f)\n", angle3 * DEG2RAD, angle1 * DEG2RAD, angle2 * DEG2RAD, -angle2 * DEG2RAD, angle1 * DEG2RAD);
+                                        UDP_send(sendbuf);
+                                    }
+                                    else{
+                                        ROS_WARN("check joint_states");
+                                    }
+                                }
+                            }
+                            else if (rec_right[0] < -400){      // 
+                                if (huiling_ref == 0){
+                                    huiling_ref = 1;
+                                    ref_ang[0] = js_angle[0];
+                                    ref_ang[1] = js_angle[1];
+                                    ref_ang[2] = js_angle[2];
+
+                                    ref_rot[0] = rec_right[4];
+                                    ref_rot[1] = rec_right[5]; 
+                                    ref_rot[2] = rec_right[6];
+                                }
+
+                                if (huiling_ref == 1){
+                                    if (abs(rec_right[4] - ref_rot[0]) > rDEADZONE){
+                                        huiling_flag = 1;
+                                        angle1 = 0.0;
+                                    }
+                                    else {
+                                        angle1 = ref_ang[0];
+                                    }
+                            
+                                    if (abs(rec_right[5] - ref_rot[1]) >rDEADZONE){
+                                        huiling_flag = 1;
+                                        angle2 = 0.0;
+                                    }
+                                    else {
+                                        angle2 = ref_ang[1];
+                                    }
+
+                                    if (abs(rec_right[6] - ref_rot[2]) >rDEADZONE){
+                                        huiling_flag = 1;
+                                        angle3 = 0.0;
+                                    }
+                                    else {
+                                        angle3 = ref_ang[2];
+                                    }
+
+                                    if (huiling_flag == 1)
+                                    {
+                                        huiling_flag = 0;
+                                        if (moving == 0){
+                                            moving = 1;
+                                            if (js_ready == 1){
+                                                sprintf(sendbuf,"moveJ(3,%.3f,%.3f,%.3f,%.3f,%.3f,0.3)\n", angle3, angle1, angle2, -angle2, angle1);
+                                                UDP_send(sendbuf);
+                                            }
+                                            else{
+                                                ROS_WARN("check joint_states");
+                                            }
+                                        }
+                                    } 
+                                }
+                            }
+                            else {
+                                huiling_ref = 0;
+                                guanjie_ref = 0;
+                                huiling_flag = 0;
+                            }
+                        }
+                        else{
+                            if (moving == 1){
+                                moving = 0;
+                                recf[4].clear();
+                                recf[5].clear();
+                                recf[6].clear();
                                 sprintf(sendbuf,"stopMove(3)\n");
                                 UDP_send(sendbuf);
                             }
-
-                            if(rec_right[8] > 200){
-                                if (rec_right[1] > 400){
-                                    if (enonce == 0){
-                                        enonce = 1;
-                                        sprintf(sendbuf,"EnMotor(3,-1)\n");
-                                        UDP_send(sendbuf);
-                                        sprintf(sendbuf,"EnMotor(4,-1)\n");
-                                        UDP_send(sendbuf);
-                                    }
-                                }
-                                else if (rec_right[1] < -400)
-                                {
-                                    if (enonce == 1){
-                                        enonce = 0;
-                                        sprintf(sendbuf,"DisMotor(3,-1)\n");
-                                        UDP_send(sendbuf);
-                                        sprintf(sendbuf,"DisMotor(4,-1)\n");
-                                        UDP_send(sendbuf);
-                                    }
-                                }
-                            }
+                            huiling_ref = 0;
+                            guanjie_ref = 0;
+                            huiling_flag = 0;
                         }
-                        else if(rec_right[0] > 400 && last_ldmode == STOP)        // 右手摇杆打左
-                        {   
-                            ldmode = GUANJIE;
-                            ref_rot[0] = rec_right[4];
-                            ref_rot[1] = rec_right[5];
-                            ref_rot[2] = rec_right[6];
-
-                            ref_ang[0] = js_angle[0];
-                            ref_ang[1] = js_angle[1];
-                            ref_ang[2] = js_angle[2];
-
-                            angle1 = (double)(rec_right[4] - ref_rot[0]) /500.0 * 180.0 + ref_ang[0] * RAD2DEG;
-                            angle2 = (double)(rec_right[5] - ref_rot[1]) /500.0 * 60.0 + ref_ang[1] * RAD2DEG;
-                            angle3 = (double)(rec_right[6] - ref_rot[2]) /500.0 * 180.0 + ref_ang[2] * RAD2DEG;
-
-                            last_angle1 = angle1;
-                            last_angle2 = angle2;
-                            last_angle3 = angle3;
-
-                        }
-                        else if (rec_right[0] < -400 && last_ldmode == STOP)
-                        {
-                            ldmode = HUILING;
-
-                            ref_ang[0] = js_angle[0];
-                            ref_ang[1] = js_angle[1];
-                            ref_ang[2] = js_angle[2];
-                        }
-
-                        if (ldmode == GUANJIE)
-                        {
-                            angle1 = (double)(rec_right[4] - ref_rot[0]) /500.0 * 180.0 + ref_ang[0] * RAD2DEG;
-                            angle2 = (double)(rec_right[5] - ref_rot[1]) /500.0 * 60.0 + ref_ang[1] * RAD2DEG;
-                            angle3 = (double)(rec_right[6] - ref_rot[2]) /500.0 * 180.0 + ref_ang[2] * RAD2DEG;
-
-                            if (angle1 - last_angle1 > max_step_angle)
-                            {
-                                angle1 = last_angle1 + max_step_angle;
-                            }
-                            else if (angle1 - last_angle1 < -max_step_angle)
-                            {
-                                angle1 = last_angle1 - max_step_angle;
-                            }
-                            last_angle1 = angle1;
-
-                            if (angle2 - last_angle2 > max_step_angle)
-                            {
-                                angle2 = last_angle2 + max_step_angle;
-                            }
-                            else if (angle2 - last_angle2 < -max_step_angle)
-                            {
-                                angle2 = last_angle2 - max_step_angle;
-                            }
-                            last_angle2 = angle2;
-
-                            if (angle3 - last_angle3 > max_step_angle)
-                            {
-                                angle3 = last_angle3 + max_step_angle;
-                            }
-                            else if (angle3 - last_angle3 < -max_step_angle)
-                            {
-                                angle3 = last_angle3 - max_step_angle;
-                            }
-                            last_angle3 = angle3;
-                            
-                            if (js_ready == 1){
-                                sprintf(sendbuf,"moveFollow(3,%.3f,%.3f,%.3f,%.3f,%.3f)\n", angle3 * DEG2RAD, angle1 * DEG2RAD, angle2 * DEG2RAD, -angle2 * DEG2RAD, angle1 * DEG2RAD);
-                                UDP_send(sendbuf);
-                            }
-                        }
-
-                        if (ldmode == HUILING)
-                        {
-                            // TODO：如果旋扭回到中值附近则发送对应零给关节
-                            if (abs(rec_right[4]) <rDEADZONE){
-                                angle1 = 0.0;
-                            }
-                            else {
-                                angle1 = ref_ang[0];
-                            }
-                    
-                            if (abs(rec_right[5]) <rDEADZONE){
-                                angle2 = 0.0;
-                            }
-                            else {
-                                angle2 = ref_ang[1];
-                            }
-
-                            if (abs(rec_right[6]) <rDEADZONE){
-                                angle3 = 0.0;
-                            }
-                            else {
-                                angle3 = ref_ang[2];
-                            }
-
-                            if (last_ldmode == STOP)
-                            {
-                                sprintf(sendbuf,"moveJ(3,%.3f,%.3f,%.3f,%.3f,%.3f,0.3)\n", angle3, angle1, angle2, -angle2, angle1);
-                                UDP_send(sendbuf);
-                            } 
-                        }
-
-                        last_ldmode = ldmode;
                     }
-                    
                 }
                 sum = 0;
                 ser.flushInput(); 
             } 
-            else{
-                watchdog++;
-                if (watchdog > param_loop_rate_ * 3){  // 3秒检测不到则认为已经加锁
-                    watchdog = 0;
-                    if (first_lock == 1)
-                    {
-                        first_lock = 0;
-                        printf("Car Manipulator DisArmed\n");
-                    }
+            
+        }
+        else{
+            watchdog++;
+            if (watchdog > param_loop_rate_ * 3){  // 3秒检测不到则认为已经加锁
+                watchdog = 0;
+                if (first_lock == 1)
+                {
+                    first_lock = 0;
+                    ROS_INFO("Car Manipulator DisArmed");
                 }
             }  
         }  
