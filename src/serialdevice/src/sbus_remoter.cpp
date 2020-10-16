@@ -517,8 +517,13 @@ int main (int argc, char** argv)
                                             huiling_flag = 0;
                                             if (moving == 0){
                                                 moving = 1;
-                                                sprintf(sendbuf,"moveJ(3,%.3f,%.3f,%.3f,%.3f,%.3f,0.3)\n", angle3, angle1, angle2, -angle2, angle1);
-                                                UDP_send(sendbuf);
+                                                if (js_ready == 1){
+                                                    sprintf(sendbuf,"moveJ(3,%.3f,%.3f,%.3f,%.3f,%.3f,0.3)\n", angle3, angle1, angle2, -angle2, angle1);
+                                                    UDP_send(sendbuf);
+                                                }
+                                                else{
+                                                    ROS_WARN("check joint_states");
+                                                }
                                             }
                                         } 
                                     }
@@ -526,16 +531,20 @@ int main (int argc, char** argv)
                                 else {
                                     huiling_ref = 0;
                                     guanjie_ref = 0;
+                                    huiling_flag = 0;
                                 }
                             }
                             else{
                                 if (moving == 1){
                                     moving = 0;
+                                    recf[14].clear();
+                                    recf[15].clear();
                                     sprintf(sendbuf,"stopMove(3)\n");
                                     UDP_send(sendbuf);
                                 }
                                 huiling_ref = 0;
                                 guanjie_ref = 0;
+                                huiling_flag = 0;
                             }
 
                         }
