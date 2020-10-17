@@ -6,7 +6,7 @@
     <param name="leftpaw_baudrate"   value="9600"/>
 
     <param name="rightpaw_use"   value="1"/>
-    <param name="rightpaw_port"   value="/dev/righttpaw"/>
+    <param name="rightpaw_port"   value="/dev/paw_usb"/>
     <param name="rightpaw_baudrate"   value="9600"/>
     
     <param name="loop_rate"   value="20"/>

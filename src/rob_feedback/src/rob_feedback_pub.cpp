@@ -1,7 +1,8 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
+#include "std_msgs/Float32.h"
 #include "sensor_msgs/JointState.h"
-# include "geometry_msgs/WrenchStamped.h"
+#include "geometry_msgs/WrenchStamped.h"
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -79,6 +80,7 @@ int main(int argc, char *argv[])
 	ros::Publisher js_pub = n.advertise<sensor_msgs::JointState>("joint_states", 1000);
 	ros::Publisher wrc_l_pub = n.advertise<geometry_msgs::WrenchStamped>("wrench_left", 1000);
 	ros::Publisher wrc_r_pub = n.advertise<geometry_msgs::WrenchStamped>("wrench_right", 1000);
+	ros::Publisher vm = n.advertise<std_msgs::Float32>("voltage_mesr", 1000);
 	ros::Rate loop_rate(1000);
 
 	int rec_len = 0;
@@ -88,6 +90,8 @@ int main(int argc, char *argv[])
 	int pub_cnt = 0;
 	int i = 0;
 	double ft[12] = {0.0};
+
+	std_msgs::Float32 voltage;
 	
 	while (ros::ok())
 	{
@@ -96,7 +100,7 @@ int main(int argc, char *argv[])
 		rec_len = recvfrom(sockSer, recvbuf, sizeof(recvbuf), MSG_DONTWAIT, (struct sockaddr*)&addrCli, &addrlen);
 		if (rec_len>0)
 		{
-			//ROS_INFO("Cli:>%s\n", recvbuf);
+			// ROS_INFO("Cli:>%s\n", recvbuf);
 			js.header.stamp = ros::Time::now();
 			w_r.header.stamp = ros::Time::now();
 			w_r.header.frame_id = "toollink_r";
@@ -155,12 +159,15 @@ int main(int argc, char *argv[])
 				w_r.wrench.torque.y = ft[10];
 				w_r.wrench.torque.z = ft[11];
 
+				voltage.data = atof(vStr.at(60).c_str());
+
 				if (pub_cnt > int(1000.0/param_rate))
 				{
 					pub_cnt = 0;
 					js_pub.publish(js);
 					wrc_l_pub.publish(w_l);
 					wrc_r_pub.publish(w_r);
+					vm.publish(voltage);
 				}
 				pub_cnt ++;
 			}

@@ -5,7 +5,7 @@
 
   <node name="sbus_remoter" pkg="serialdevice" type="sbus_remoter_pub" output="screen" respawn="false">
   <!-- <param name="port"       value="/dev/remote_USB"/>   -->
-  <param name="port"       value="/dev/ttyUSB1"/>  
+  <param name="port"       value="/dev/sbus_remorer"/>  
   <param name="baudrate"   value="115200"/>
   <param name="loop_rate"   value="50"/>
   <param name="armx"   value="1"/>

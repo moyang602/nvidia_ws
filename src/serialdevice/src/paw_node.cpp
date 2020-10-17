@@ -25,12 +25,14 @@ int param_loop_rate_;
 void write_callback_pawcmd(const serial_dev_msgs::Paw & pawcmd) 
 {
     uint8_t cmd[8] = {'\0'};
+    uint16_t cmd_pos;
     if (param_leftuse_){
         cmd[0] = 0xaa;
         ROS_INFO("Set left Paw to : %f", pawcmd.leftPawPosition); 
-        if ( pawcmd.leftPawPosition > 0 && pawcmd.leftPawPosition > 180.0){
-            cmd[1] = uint16_t(pawcmd.leftPawPosition) >> 8;
-            cmd[2] = uint16_t(pawcmd.leftPawPosition) | 0xff;
+        if ( pawcmd.leftPawPosition >= 0 && pawcmd.leftPawPosition <= 90.0){
+            cmd_pos = uint16_t(pawcmd.leftPawPosition * 13.5 + 800);
+            cmd[1] = cmd_pos >> 8;
+            cmd[2] = cmd_pos & 0xff;
         }
         cmd[3] = 0x55;
         leftser.write(cmd,4);
@@ -38,10 +40,11 @@ void write_callback_pawcmd(const serial_dev_msgs::Paw & pawcmd)
 
     if (param_rightuse_){
         cmd[0] = 0xaa;
-        ROS_INFO("Set left Paw to : %f", pawcmd.rightPawPosition); 
-        if ( pawcmd.rightPawPosition > 0 && pawcmd.rightPawPosition > 180.0){
-            cmd[1] = uint16_t(pawcmd.rightPawPosition) >> 8;
-            cmd[2] = uint16_t(pawcmd.rightPawPosition) | 0xff;
+        ROS_INFO("Set right Paw to : %f", pawcmd.rightPawPosition); 
+        if ( pawcmd.rightPawPosition >= 0 && pawcmd.rightPawPosition <= 90.0){
+            cmd_pos = uint16_t(pawcmd.rightPawPosition * 13.5 + 800);
+            cmd[1] = cmd_pos >> 8;
+            cmd[2] = cmd_pos & 0xff;
         }
         cmd[3] = 0x55;
         rightser.write(cmd,4);
