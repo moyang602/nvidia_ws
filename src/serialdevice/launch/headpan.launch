@@ -1,0 +1,16 @@
+<launch>
+  <node name="head_pan" pkg="serialdevice" type="head_pan" output="screen" respawn="false">
+    
+    <param name="head_pan_port"       value="/dev/head_pan"/>  
+    <param name="head_pan_baudrate"   value="9600"/>
+    <param name="loop_rate"   value="20"/>
+    
+    <param name="pitchuplim"   value="180.0"/>
+    <param name="pitchdownlim"   value="0.0"/>
+    <param name="yawuplim"   value="180.0"/>
+    <param name="yawdownlim"   value="0.0"/>
+  </node>
+</launch>
+
+
+

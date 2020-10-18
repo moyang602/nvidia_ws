@@ -225,3 +225,12 @@ add_dependencies(paw_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_
 target_link_libraries(paw_node
   ${catkin_LIBRARIES}
 )
+
+
+add_executable(head_pan
+  src/head_pan.cpp
+)
+add_dependencies(head_pan ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(head_pan
+  ${catkin_LIBRARIES}
+)
