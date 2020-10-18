@@ -56,6 +56,7 @@ void write_callback_pawcmd(const serial_dev_msgs::headpan & pancmd)
     cmd[2] = yawcmd & 0xff;
     cmd[3] = pitchcmd >> 8;
     cmd[4] = pitchcmd & 0xff;
+    cmd[5] = 0x00;
     for (i = 0; i<5; i++){
         cmd[5] += cmd[i];
     }
